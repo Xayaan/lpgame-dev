@@ -1,4 +1,10 @@
 {
+  "name": "lpgame-smartcontracts",
+  "scripts": {
+    "clean": "rimraf ./build",
+    "test": "truffle test",
+    "test-poolOne": "truffle test ./test/poolOne.js"
+  },
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.1",
     "@openzeppelin/test-environment": "^0.1.5",

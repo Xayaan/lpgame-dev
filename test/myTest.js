@@ -3,6 +3,7 @@ const Crypt = artifacts.require('mocks/crypt.sol');
 const PoolOne = artifacts.require('PoolOne.sol');
 
 var pool;
+
 function increaseTime(addSeconds) {
   const id = Date.now();
 
@@ -101,7 +102,8 @@ contract('PoolOne', (accounts) => {
     const amountOfGas = await pool.myStake.estimateGas(amount, {from: trader3});
     console.log('gas amount: ', amountOfGas);
   });
-  it('Test 3: should 1500 user stake', async () => {
+
+  it('Test 4: should 2000 user stake', async () => {
     const amount = web3.utils.toWei('0.01');
     for (let i = 0; i < 500; i++) {
       let trader = trader1
@@ -115,7 +117,7 @@ contract('PoolOne', (accounts) => {
         {from: trader}
       );
     }
-    
+
     let i=0;
     while (i<500) {
       await pool.myStake(
