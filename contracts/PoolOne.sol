@@ -29,7 +29,6 @@ contract PoolOne is ReentrancyGuard {
     uint public fTotalSupply;
     uint public rTotalSupplyNew;
     uint public fTotalSupplyNew;
-    uint public bal;
     // struct FakeBlock {
     //     uint timestamp;
     // }
@@ -402,7 +401,7 @@ contract PoolOne is ReentrancyGuard {
     }
 
     // function myStake(uint amount) external ensureDepositSize(amount) stopDeposits() nonReentrant {
-    function stake(uint amount) external ensureDepositSize(amount) stopDeposits() nonReentrant {
+    function stake(uint amount) external ensureDepositSize(amount) stopDeposits() nonReentrant checkCycle() {
         rTotalSupply = rTotalSupplyNew;
         fTotalSupply = fTotalSupplyNew;
 
@@ -449,9 +448,9 @@ contract PoolOne is ReentrancyGuard {
         emit StakeEvent(msg.sender, amount);
     }
 
-    function _stakedBalances(address staker) public returns (uint) {
-        bal = stakedBalances[staker];
-        if (rTotalSupplyNew == 0) {
+    function _stakedBalances(address staker) public view returns (uint) {
+        uint bal = stakedBalances[staker];
+        if (rTotalSupply == 0) {
             return bal;
         }
         else {
