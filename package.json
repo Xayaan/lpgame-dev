@@ -3,6 +3,7 @@
   "scripts": {
     "clean": "rimraf ./build",
     "test": "truffle test",
+    "test-gas": "truffle test ./test/gasTest.js",
     "test-poolOne": "truffle test ./test/poolOne.js"
   },
   "dependencies": {

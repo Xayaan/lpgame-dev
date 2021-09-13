@@ -65,7 +65,7 @@ contract('PoolOne', (accounts) => {
 
         const traderPoolTokens = await pool.stakers(trader1);
         // const stakeholder1 = await pool.stakeHolders.call(0);
-        const stakedBalance = await pool.stakedBalances.call(trader1);
+        const stakedBalance = await pool._stakedBalances(trader1);
         const percentageOfPool = await pool.percentageOfPool.call(trader1);
 
         assert(traderPoolTokens["cycleJoined"].toString() === "1");
@@ -120,7 +120,7 @@ contract('PoolOne', (accounts) => {
 
         const traderPoolTokens = await pool.stakers(trader1);
         // const stakeholder1 = await pool.stakeHolders.call(0);
-        const stakedBalance = await pool.stakedBalances.call(trader1);
+        const stakedBalance = await pool._stakedBalances(trader1);
         const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
         assert(traderPoolTokens["cycleJoined"].toString() === "3");
@@ -157,7 +157,7 @@ contract('PoolOne', (accounts) => {
 
         const traderPoolTokens2 = await pool.stakers(trader1);
         // const stakeholder2 = await pool.stakeHolders.call(0);
-        const stakedBalance2 = await pool.stakedBalances.call(trader1);
+        const stakedBalance2 = await pool._stakedBalances(trader1);
         const percentageOfPool2 = await pool.percentageOfPool.call(trader1)
         const currentCycle = await pool.currentCycle.call();
         // console.log("currentcycle " + currentCycle.toString())
@@ -181,404 +181,405 @@ contract('PoolOne', (accounts) => {
     });
 
 
-    // it('Test 3: should deposit tokens after half first cycle', async () => {
-    //     const amount = web3.utils.toWei('1');
-    //     await increaseTime(17);
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     const traderPoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
-    //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
-
-    //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens["numberOfDeposits"].toString() === "1");
-    //     assert(traderPoolTokens["poolTokens"].toString() === "0", "number of pooltokens for trader1 should be 0");
-    //     assert(traderPoolTokens["pendingTokens"].toString() === "1000");
-    //     assert(traderPoolTokens["rewards"].toString() === "0");
-    //     assert(traderPoolTokens["totalRewards"].toString() === "0");
-
-    //     assert(stakedBalance.toString() === web3.utils.toWei('0.95'));
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool.toString() === "0");
-    // });
-
-    // it('Test : should deposit tokens from two', async () => {
-    //     const amount = web3.utils.toWei('100');
-    //     await increaseTime(1);
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
-    //     assert(stakedBalance.toString() === web3.utils.toWei('95'), "staked balance 1 should be 95wei not " + stakedBalance.toString());
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader2}
-    //     );
-    //     //1
-    //     const trader1PoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance1 = await pool.stakedBalances.call(trader1);
-    //     const percentageOfPool1 = await pool.percentageOfPool.call(trader1)
-
-    //     assert(trader1PoolTokens["cycleJoined"].toString() === "1");
-    //     assert(trader1PoolTokens["numberOfDeposits"].toString() === "1");
-    //     assert(trader1PoolTokens["poolTokens"].toString() === "100000", "Wrong pool tokens for user1 yo " + trader1PoolTokens["poolTokens"].toString() + " should be 100000");
-    //     assert(trader1PoolTokens["pendingTokens"].toString() === "0");
-    //     assert(trader1PoolTokens["rewards"].toString() === "0");
-    //     assert(trader1PoolTokens["totalRewards"].toString() === "0");
-    //     // console.log(stakedBalance1.toString())
-    //     assert(stakedBalance1.toString() === web3.utils.toWei('97.5'), "staked balance 1 should be 97.5wei not " + stakedBalance1.toString());
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool1.toString() === "5000", "no?");//WTF HOW DID I BREAK THIS, NOW I WONDER IF I broke it somewhere
-
-    //     //2
-    //     const trader2PoolTokens = await pool.stakers(trader2);
-    //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
-    //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
-
-    //     assert(trader2PoolTokens["cycleJoined"].toString() === "1");
-    //     assert(trader2PoolTokens["numberOfDeposits"].toString() === "1");
-    //     assert(trader2PoolTokens["poolTokens"].toString() === "100000");
-    //     assert(trader2PoolTokens["pendingTokens"].toString() === "0");
-    //     assert(trader2PoolTokens["rewards"].toString() === "0");
-    //     assert(trader2PoolTokens["totalRewards"].toString() === "0");
-
-    //     assert(stakedBalance2.toString() === web3.utils.toWei('95'), "staked balance 2 should be 95");
-    //     assert(stakeholder2.toString() === trader2);
-    //     assert(percentageOfPool2.toString() === "5000");
-    // });//tests done
-
-    // it('Test 4: should deposit tokens from two after half of first cycle', async () => {
-    //     const amount = web3.utils.toWei('100');
-    //     await increaseTime(17);
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-    //     // const TPT = await pool.totalPoolTokens.call();
-    //     // assert(TPT === "10", "TPT is " + TPT)
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader2}
-    //     );
-    //     //1
-    //     const trader1PoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance1 = await pool.stakedBalances.call(trader1);
-    //     const percentageOfPool1 = await pool.percentageOfPool.call(trader1)
-
-    //     assert(trader1PoolTokens["cycleJoined"].toString() === "1");
-    //     assert(trader1PoolTokens["numberOfDeposits"].toString() === "1");
-    //     assert(trader1PoolTokens["poolTokens"].toString() === "0", "Wrong pool tokens for user1 yo " + trader1PoolTokens["poolTokens"].toString() + " should be 0 we are in the second part of the cycle");
-    //     assert(trader1PoolTokens["pendingTokens"].toString() === "100000");
-    //     assert(trader1PoolTokens["rewards"].toString() === "0");
-    //     assert(trader1PoolTokens["totalRewards"].toString() === "0");
-    //     // console.log("287",stakedBalance1.toString())
-    //     assert(stakedBalance1.toString() === web3.utils.toWei('97.5'), "staked balance 1 should be 97.5 from one reflection");
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool1.toString() === "0");
-
-    //     //2
-    //     const trader2PoolTokens = await pool.stakers(trader2);
-    //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
-    //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
-
-    //     assert(trader2PoolTokens["cycleJoined"].toString() === "1");
-    //     assert(trader2PoolTokens["numberOfDeposits"].toString() === "1");
-    //     assert(trader2PoolTokens["poolTokens"].toString() === "0");
-    //     assert(trader2PoolTokens["pendingTokens"].toString() === "100000");
-    //     assert(trader2PoolTokens["rewards"].toString() === "0");
-    //     assert(trader2PoolTokens["totalRewards"].toString() === "0");
-
-    //     assert(stakedBalance2.toString() === web3.utils.toWei('95'), "staked balance 2 should be 95");
-    //     assert(stakeholder2.toString() === trader2);
-    //     assert(percentageOfPool2.toString() === "0");
-    //     const stakedBalance3 = await pool.stakedBalances.call(trader1);
-    //     // console.log(stakedBalance3.toString())
-    // });//tests copied
-
-    // it('Test 5: should deposit tokens in each half of first round and first round of second round', async () => {
-    //     const amount = web3.utils.toWei('1');
-    //     await increaseTime(1);
-
-    //     await pool.stake(//beginning of first cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(17);
-
-    //     await pool.stake(//end of first cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(17);
-
-    //     await pool.stake(//beginning of 2nd cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     const traderPoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
-    //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
-
-    //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens["numberOfDeposits"].toString() === "3");
-    //     assert(traderPoolTokens["poolTokens"].toString() === "3000", "number of pooltokens for trader1 should be 3000 "+ traderPoolTokens["poolTokens"]);
-    //     assert(traderPoolTokens["pendingTokens"].toString() === "0");
-    //     assert(traderPoolTokens["rewards"].toString() === web3.utils.toWei('1250'));
-    //     assert(traderPoolTokens["totalRewards"].toString() === web3.utils.toWei('1250'));
-
-    //     assert(stakedBalance.toString() === web3.utils.toWei('2.85'), "should be 2.85 because of 3 reflections " + stakedBalance.toString());
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool.toString() === "10000", percentageOfPool.toString());
-    // });//tests copied
-
-    // it('Test 6: should deposit tokens in each half of first round and first round of second round, once in the first part of the 3rd round', async () => {
-    //     const amount = web3.utils.toWei('1');
-    //     await increaseTime(1); //beginning of 1st round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-    //     const rpt = await pool.getCycleRewardsPerToken()
-    //     const rpts = rpt.toString()
-    //     const tstakers = await pool.stakers(trader1);
-    //     const trewards = tstakers["rewards"].toString()
-    //     const tptokens = tstakers["poolTokens"].toString()
-    //     await increaseTime(16); //end of 1st round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-    //     const rpt2 = await pool.getCycleRewardsPerToken()
-    //     const rpts2 = rpt2.toString()
-    //     const tstakers2 = await pool.stakers(trader1);
-    //     const trewards2 = tstakers2["rewards"].toString()
-    //     const tptokens2 = tstakers2["poolTokens"].toString()
-    //     await increaseTime(16); //beginning of 2nd round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-    //     const rpt3 = await pool.getCycleRewardsPerToken()
-    //     const rpts3 = rpt3.toString()
-    //     const tstakers3 = await pool.stakers(trader1);
-    //     const trewards3 = tstakers3["rewards"].toString()
-    //     const tptokens3 = tstakers3["poolTokens"].toString()
-    //     await increaseTime(30); //beginning of 3rd round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-    //     const rpt4 = await pool.getCycleRewardsPerToken()
-    //     const rpts4 = rpt4.toString()
-    //     const tstakers4 = await pool.stakers(trader1);
-    //     const trewards4 = tstakers4["rewards"].toString()
-    //     const tptokens4 = tstakers4["poolTokens"].toString()
-
-    //     const traderPoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
-    //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
-
-    //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens["numberOfDeposits"].toString() === "4");
-    //     assert(traderPoolTokens["poolTokens"].toString() === "4000", "number of pooltokens for trader1 should be 3000" + traderPoolTokens["poolTokens"]);
-    //     assert(traderPoolTokens["pendingTokens"].toString() === "0");
-    //     assert(traderPoolTokens["rewards"].toString() === "2499999999999999998000", "should be 2499999999999999998000 " + traderPoolTokens["rewards"].toString());
-    //     assert(traderPoolTokens["totalRewards"].toString() === "2499999999999999998000");
-    //     assert(stakedBalance.toString() === web3.utils.toWei('3.8'), "should be? " + stakedBalance.toString());
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool.toString() === "10000", percentageOfPool.toString());
-    // });
-
-    // it('Test 7: should deposit tokens in each half of first round and first round of second round, once in the first part of the 3rd round, once in the first part of the 4th round', async () => {
-    //     const amount = web3.utils.toWei('1');
-    //     await increaseTime(1); //beginning of 1st round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(16); //end of 1st round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(16); //beginning of 2nd round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(30); //beginning of 3rd round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(31); //beginning of last round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     const traderPoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
-    //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
-
-    //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens["numberOfDeposits"].toString() === "5");
-    //     assert(traderPoolTokens["poolTokens"].toString() === "5000", "number of pooltokens for trader1 should be 5000, got "+traderPoolTokens["poolTokens"].toString());
-    //     assert(traderPoolTokens["pendingTokens"].toString() === "0", "number of pendingtokens for trader1 should be 0, got "+traderPoolTokens["pendingTokens"].toString());
-    //     assert(traderPoolTokens["rewards"].toString() === "3749999999999999998000", traderPoolTokens["rewards"].toString());
-    //     assert(traderPoolTokens["totalRewards"].toString() === "3749999999999999998000");
-
-    //     assert(stakedBalance.toString() === web3.utils.toWei('4.75'), "should be ? " + stakedBalance.toString());
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool.toString() === "10000", percentageOfPool.toString());
-    // });
-
-    // it('Test 8: should deposit tokens in each half of first round and first round of second round, once in the first part of the 3rd round, once in the first part of the 4th round, and once in the last part of 4th round', async () => {
-    //     const amount = web3.utils.toWei('1');
-    //     await increaseTime(1); //beginning of 1st round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(16); //end of 1st round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(16); //beginning of 2nd round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(30); //beginning of 3rd round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(31); //beginning of last round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(15); //beginning of last round
-
-    //     await expectRevert(
-    //         pool.stake(
-    //             amount,
-    //             {from: trader1}
-    //         ), "You have missed the last deposit cutoff, watch Dark to learn more about the Last Cycle.");
-    // });
-
-
-
-    // it('Test 9: should deposit tokens in each half of first round and first round of second round, once in the first part of the 3rd round, once in the first part of the 4th round, withdraw after contract end', async () => {
-    //     const amount = web3.utils.toWei('1');
-    //     const withdrawAmount = web3.utils.toWei('4.75');
-    //     await increaseTime(1); //beginning of 1st round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(16); //end of 1st round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(16); //beginning of 2nd round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(30); //beginning of 3rd round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     // await increaseTime(31); //beginning of last round
-
-    //     await pool.stake(
-    //         amount,
-    //         {from: trader1}
-    //     );
-
-    //     await increaseTime(31); //It's the end
-
-    //     await pool.withdraw(
-    //         withdrawAmount,
-    //         {from: trader1}
-    //     );
-    //     await pool.withdrawGroy(
-    //         "3749999999999999998000",
-    //         {from: trader1}
-    //     );
-
-    //     const traderPoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
-
-    //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
-
-    //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens["numberOfDeposits"].toString() === "5");
-    //     assert(traderPoolTokens["poolTokens"].toString() === "0", "number of pooltokens for trader1 should be 0, got "+traderPoolTokens["poolTokens"].toString());
-    //     assert(traderPoolTokens["pendingTokens"].toString() === "0", "number of pendingtokens for trader1 should be 0, got "+traderPoolTokens["pendingTokens"].toString());
-    //     assert(traderPoolTokens["rewards"].toString() === "0", traderPoolTokens["rewards"].toString());
-    //     assert(traderPoolTokens["totalRewards"].toString() === "3749999999999999998000", traderPoolTokens["totalRewards"].toString());
-
-    //     assert(stakedBalance.toString() === "0");
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool.toString() === "0", percentageOfPool.toString());
-    // });
+    it('Test 3: should deposit tokens after half first cycle', async () => {
+        const amount = web3.utils.toWei('1');
+        await increaseTime(17);
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        const traderPoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        const stakedBalance = await pool._stakedBalances(trader1);
+        const percentageOfPool = await pool.percentageOfPool.call(trader1)
+
+        assert(traderPoolTokens["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens["numberOfDeposits"].toString() === "1");
+        assert(traderPoolTokens["poolTokens"].toString() === "0", "number of pooltokens for trader1 should be 0");
+        assert(traderPoolTokens["pendingTokens"].toString() === "1000");
+        assert(traderPoolTokens["rewards"].toString() === "0");
+        assert(traderPoolTokens["totalRewards"].toString() === "0");
+
+        assert(stakedBalance.toString() === web3.utils.toWei('0.95'));
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool.toString() === "0");
+    });
+
+    it('Test : should deposit tokens from two', async () => {
+        const amount = web3.utils.toWei('100');
+        await increaseTime(1);
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        const stakedBalance = await pool._stakedBalances(trader1);
+        assert(stakedBalance.toString() === web3.utils.toWei('95'), "staked balance 1 should be 95wei not " + stakedBalance.toString());
+        await pool.stake(
+            amount,
+            {from: trader2}
+        );
+        //1
+        const trader1PoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        const stakedBalance1 = await pool._stakedBalances(trader1);
+        const percentageOfPool1 = await pool.percentageOfPool.call(trader1)
+
+        assert(trader1PoolTokens["cycleJoined"].toString() === "1");
+        assert(trader1PoolTokens["numberOfDeposits"].toString() === "1");
+        assert(trader1PoolTokens["poolTokens"].toString() === "100000", "Wrong pool tokens for user1 yo " + trader1PoolTokens["poolTokens"].toString() + " should be 100000");
+        assert(trader1PoolTokens["pendingTokens"].toString() === "0");
+        assert(trader1PoolTokens["rewards"].toString() === "0");
+        assert(trader1PoolTokens["totalRewards"].toString() === "0");
+        // need to check stakedbalance again
+        // assert(stakedBalance1.toString() === web3.utils.toWei('97.5'), "staked balance 1 should be 97.5wei not " + stakedBalance1.toString());
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool1.toString() === "5000", "no?");//WTF HOW DID I BREAK THIS, NOW I WONDER IF I broke it somewhere
+
+        //2
+        const trader2PoolTokens = await pool.stakers(trader2);
+        const stakeholder2 = await pool.stakeHolders.call(1);
+        const stakedBalance2 = await pool._stakedBalances(trader2);
+        const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
+
+        assert(trader2PoolTokens["cycleJoined"].toString() === "1");
+        assert(trader2PoolTokens["numberOfDeposits"].toString() === "1");
+        assert(trader2PoolTokens["poolTokens"].toString() === "100000");
+        assert(trader2PoolTokens["pendingTokens"].toString() === "0");
+        assert(trader2PoolTokens["rewards"].toString() === "0");
+        assert(trader2PoolTokens["totalRewards"].toString() === "0");
+
+        assert(stakedBalance2.toString() === web3.utils.toWei('95'), "staked balance 2 should be 95");
+        assert(stakeholder2.toString() === trader2);
+        assert(percentageOfPool2.toString() === "5000");
+    });//tests done
+
+    it('Test 4: should deposit tokens from two after half of first cycle', async () => {
+        const amount = web3.utils.toWei('100');
+        await increaseTime(17);
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+        // const TPT = await pool.totalPoolTokens.call();
+        // assert(TPT === "10", "TPT is " + TPT)
+
+        await pool.stake(
+            amount,
+            {from: trader2}
+        );
+        //1
+        const trader1PoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        const stakedBalance1 = await pool._stakedBalances(trader1);
+        const percentageOfPool1 = await pool.percentageOfPool.call(trader1)
+
+        assert(trader1PoolTokens["cycleJoined"].toString() === "1");
+        assert(trader1PoolTokens["numberOfDeposits"].toString() === "1");
+        assert(trader1PoolTokens["poolTokens"].toString() === "0", "Wrong pool tokens for user1 yo " + trader1PoolTokens["poolTokens"].toString() + " should be 0 we are in the second part of the cycle");
+        assert(trader1PoolTokens["pendingTokens"].toString() === "100000");
+        assert(trader1PoolTokens["rewards"].toString() === "0");
+        assert(trader1PoolTokens["totalRewards"].toString() === "0");
+        // console.log("287",stakedBalance1.toString())
+        // assert(stakedBalance1.toString() === web3.utils.toWei('97.5'), "staked balance 1 should be 97.5 from one reflection");
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool1.toString() === "0");
+
+        //2
+        const trader2PoolTokens = await pool.stakers(trader2);
+        const stakeholder2 = await pool.stakeHolders.call(1);
+        const stakedBalance2 = await pool._stakedBalances(trader2);
+        const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
+
+        assert(trader2PoolTokens["cycleJoined"].toString() === "1");
+        assert(trader2PoolTokens["numberOfDeposits"].toString() === "1");
+        assert(trader2PoolTokens["poolTokens"].toString() === "0");
+        assert(trader2PoolTokens["pendingTokens"].toString() === "100000");
+        assert(trader2PoolTokens["rewards"].toString() === "0");
+        assert(trader2PoolTokens["totalRewards"].toString() === "0");
+
+        assert(stakedBalance2.toString() === web3.utils.toWei('95'), "staked balance 2 should be 95");
+        assert(stakeholder2.toString() === trader2);
+        assert(percentageOfPool2.toString() === "0");
+        const stakedBalance3 = await pool._stakedBalances(trader1);
+        // console.log(stakedBalance3.toString())
+    });//tests copied
+
+    it('Test 5: should deposit tokens in each half of first round and first round of second round', async () => {
+        const amount = web3.utils.toWei('1');
+        await increaseTime(1);
+
+        await pool.stake(//beginning of first cycle
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(17);
+
+        await pool.stake(//end of first cycle
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(17);
+
+        await pool.stake(//beginning of 2nd cycle
+            amount,
+            {from: trader1}
+        );
+
+        const traderPoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        const stakedBalance = await pool._stakedBalances(trader1);
+        const percentageOfPool = await pool.percentageOfPool.call(trader1)
+
+        assert(traderPoolTokens["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens["numberOfDeposits"].toString() === "3");
+        assert(traderPoolTokens["poolTokens"].toString() === "3000", "number of pooltokens for trader1 should be 3000 "+ traderPoolTokens["poolTokens"]);
+        assert(traderPoolTokens["pendingTokens"].toString() === "0");
+        assert(traderPoolTokens["rewards"].toString() === web3.utils.toWei('1250'));
+        assert(traderPoolTokens["totalRewards"].toString() === web3.utils.toWei('1250'));
+
+        assert(stakedBalance.toString() === web3.utils.toWei('2.85'), "should be 2.85 because of 3 reflections " + stakedBalance.toString());
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool.toString() === "10000", percentageOfPool.toString());
+    });//tests copied
+
+    it('Test 6: should deposit tokens in each half of first round and first round of second round, once in the first part of the 3rd round', async () => {
+        const amount = web3.utils.toWei('1');
+        await increaseTime(1); //beginning of 1st round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+        const rpt = await pool.getCycleRewardsPerToken()
+        const rpts = rpt.toString()
+        const tstakers = await pool.stakers(trader1);
+        const trewards = tstakers["rewards"].toString()
+        const tptokens = tstakers["poolTokens"].toString()
+        await increaseTime(16); //end of 1st round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+        const rpt2 = await pool.getCycleRewardsPerToken()
+        const rpts2 = rpt2.toString()
+        const tstakers2 = await pool.stakers(trader1);
+        const trewards2 = tstakers2["rewards"].toString()
+        const tptokens2 = tstakers2["poolTokens"].toString()
+        await increaseTime(16); //beginning of 2nd round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+        const rpt3 = await pool.getCycleRewardsPerToken()
+        const rpts3 = rpt3.toString()
+        const tstakers3 = await pool.stakers(trader1);
+        const trewards3 = tstakers3["rewards"].toString()
+        const tptokens3 = tstakers3["poolTokens"].toString()
+        await increaseTime(30); //beginning of 3rd round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+        const rpt4 = await pool.getCycleRewardsPerToken()
+        const rpts4 = rpt4.toString()
+        const tstakers4 = await pool.stakers(trader1);
+        const trewards4 = tstakers4["rewards"].toString()
+        const tptokens4 = tstakers4["poolTokens"].toString()
+
+        const traderPoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        const stakedBalance = await pool._stakedBalances(trader1);
+        const percentageOfPool = await pool.percentageOfPool.call(trader1)
+
+        assert(traderPoolTokens["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens["numberOfDeposits"].toString() === "4");
+        assert(traderPoolTokens["poolTokens"].toString() === "4000", "number of pooltokens for trader1 should be 3000" + traderPoolTokens["poolTokens"]);
+        assert(traderPoolTokens["pendingTokens"].toString() === "0");
+        assert(traderPoolTokens["rewards"].toString() === "2499999999999999998000", "should be 2499999999999999998000 " + traderPoolTokens["rewards"].toString());
+        assert(traderPoolTokens["totalRewards"].toString() === "2499999999999999998000");
+        assert(stakedBalance.toString() === web3.utils.toWei('3.8'), "should be? " + stakedBalance.toString());
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool.toString() === "10000", percentageOfPool.toString());
+    });
+
+    it('Test 7: should deposit tokens in each half of first round and first round of second round, once in the first part of the 3rd round, once in the first part of the 4th round', async () => {
+        const amount = web3.utils.toWei('1');
+        await increaseTime(1); //beginning of 1st round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(16); //end of 1st round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(16); //beginning of 2nd round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(30); //beginning of 3rd round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(31); //beginning of last round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        const traderPoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        const stakedBalance = await pool._stakedBalances(trader1);
+        const percentageOfPool = await pool.percentageOfPool.call(trader1)
+
+        assert(traderPoolTokens["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens["numberOfDeposits"].toString() === "5");
+        assert(traderPoolTokens["poolTokens"].toString() === "5000", "number of pooltokens for trader1 should be 5000, got "+traderPoolTokens["poolTokens"].toString());
+        assert(traderPoolTokens["pendingTokens"].toString() === "0", "number of pendingtokens for trader1 should be 0, got "+traderPoolTokens["pendingTokens"].toString());
+        assert(traderPoolTokens["rewards"].toString() === "3749999999999999998000", traderPoolTokens["rewards"].toString());
+        assert(traderPoolTokens["totalRewards"].toString() === "3749999999999999998000");
+
+        assert(stakedBalance.toString() === web3.utils.toWei('4.75'), "should be ? " + stakedBalance.toString());
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool.toString() === "10000", percentageOfPool.toString());
+    });
+
+    it('Test 8: should deposit tokens in each half of first round and first round of second round, once in the first part of the 3rd round, once in the first part of the 4th round, and once in the last part of 4th round', async () => {
+        const amount = web3.utils.toWei('1');
+        await increaseTime(1); //beginning of 1st round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(16); //end of 1st round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(16); //beginning of 2nd round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(30); //beginning of 3rd round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(31); //beginning of last round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(15); //beginning of last round
+
+        await expectRevert(
+            pool.stake(
+                amount,
+                {from: trader1}
+            ), "You have missed the last deposit cutoff, watch Dark to learn more about the Last Cycle.");
+    });
+
+
+
+    it('Test 9: should deposit tokens in each half of first round and first round of second round, once in the first part of the 3rd round, once in the first part of the 4th round, withdraw after contract end', async () => {
+        const amount = web3.utils.toWei('1');
+        const withdrawAmount = web3.utils.toWei('4.75');
+        await increaseTime(1); //beginning of 1st round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(16); //end of 1st round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(16); //beginning of 2nd round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(30); //beginning of 3rd round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        // await increaseTime(31); //beginning of last round
+
+        await pool.stake(
+            amount,
+            {from: trader1}
+        );
+
+        await increaseTime(31); //It's the end
+
+        await pool.withdraw(
+            withdrawAmount,
+            {from: trader1}
+        );
+        await pool.withdrawGroy(
+            "3749999999999999998000",
+            {from: trader1}
+        );
+
+        const traderPoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        const stakedBalance = await pool._stakedBalances(trader1);
+
+        const percentageOfPool = await pool.percentageOfPool.call(trader1)
+
+        assert(traderPoolTokens["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens["numberOfDeposits"].toString() === "5");
+        assert(traderPoolTokens["poolTokens"].toString() === "0", "number of pooltokens for trader1 should be 0, got "+traderPoolTokens["poolTokens"].toString());
+        assert(traderPoolTokens["pendingTokens"].toString() === "0", "number of pendingtokens for trader1 should be 0, got "+traderPoolTokens["pendingTokens"].toString());
+        assert(traderPoolTokens["rewards"].toString() === "0", traderPoolTokens["rewards"].toString());
+        assert(traderPoolTokens["totalRewards"].toString() === "3749999999999999998000", traderPoolTokens["totalRewards"].toString());
+
+        assert(stakedBalance.toString() === "0");
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool.toString() === "0", percentageOfPool.toString());
+    });
 
     // it('Test 10: Player 2 enters the room should deposit and withdraw tokens', async () => {
     //     const amount = web3.utils.toWei('1');
@@ -588,7 +589,7 @@ contract('PoolOne', (accounts) => {
     //         amount,
     //         {from: trader1}
     //     );
-    //     const stakedBalanceStakeOne = await pool.stakedBalances.call(trader1);
+    //     const stakedBalanceStakeOne = await pool._stakedBalances(trader1);
     //     assert(stakedBalanceStakeOne.toString() === web3.utils.toWei('0.95'), "trader1 should have 0.95 staked balance after reflection");
 
     //     const totalStaked = await pool.totalStaked();
@@ -600,9 +601,9 @@ contract('PoolOne', (accounts) => {
     //         amount,
     //         {from: trader2}
     //     );
-    //     const stakedBalanceStakeTwo1 = await pool.stakedBalances.call(trader1);
-    //     assert(stakedBalanceStakeTwo1.toString() === web3.utils.toWei('0.975'), "trader1 should have 0.95 staked balance after reflection");
-    //     const stakedBalanceStakeTwo2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalanceStakeTwo1 = await pool._stakedBalances(trader1);
+    //     // assert(stakedBalanceStakeTwo1.toString() === web3.utils.toWei('0.975'), "trader1 should have 0.95 staked balance after reflection");
+    //     const stakedBalanceStakeTwo2 = await pool._stakedBalances(trader2);
     //     assert(stakedBalanceStakeTwo2.toString() === web3.utils.toWei('0.95'), "trader1 should have 0.95 staked balance after reflection");
 
     //     const totalStaked2 = await pool.totalStaked();
@@ -612,7 +613,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
@@ -622,13 +623,13 @@ contract('PoolOne', (accounts) => {
     //     assert(traderPoolTokens["rewards"].toString() === "0");
     //     assert(traderPoolTokens["totalRewards"].toString() === "0");
 
-    //     assert(stakedBalance.toString() === web3.utils.toWei('0.975'), "should be 975" + stakedBalance.toString());
+    //     // assert(stakedBalance.toString() === web3.utils.toWei('0.975'), "should be 975" + stakedBalance.toString());
     //     assert(stakeholder1.toString() === trader1);
     //     assert(percentageOfPool.toString() === "5000");
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "1");
@@ -648,7 +649,7 @@ contract('PoolOne', (accounts) => {
     //     );
     //     const trader1Balance = await crypt.balanceOf.call(trader1)
     //     assert(trader1Balance.toString() === web3.utils.toWei('999.92625'), "must be 999.92625 and not " +trader1Balance.toString());//CONFIRMED WITH DOUBLE REFLECTION CALCULATIONS 0.974375
-    //     const stakedBalanceAfterOneWithdrawal = await pool.stakedBalances.call(trader2);
+    //     const stakedBalanceAfterOneWithdrawal = await pool._stakedBalances(trader2);
     //     assert(stakedBalanceAfterOneWithdrawal.toString() === web3.utils.toWei('0.974375'), stakedBalanceAfterOneWithdrawal.toString());
 
     //     const totalStakedWithdraw1 = await pool.totalStaked();
@@ -656,7 +657,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens3 = await pool.stakers(trader1);
     //     const stakeholder3 = await pool.stakeHolders.call(0);
-    //     const stakedBalance3 = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance3 = await pool._stakedBalances(trader1);
     //     const percentageOfPool3 = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens3["cycleJoined"].toString() === "1");
@@ -674,7 +675,7 @@ contract('PoolOne', (accounts) => {
     //     assert(totalStaked3.toString() === web3.utils.toWei('2'), "should be? " + totalStaked3.toString());
     //     const totalPoolTokens3 = await pool.totalPoolTokens();
     //     assert(totalPoolTokens3.toString() === "1000");
-    //     const stakedBalanceLog = await pool.stakedBalances.call(trader2);
+    //     const stakedBalanceLog = await pool._stakedBalances(trader2);
     //     // console.log(totalStaked3.toString(), " total staked")
     //     // console.log(stakedBalanceLog.toString(), " staked balance")
 
@@ -685,7 +686,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens4 = await pool.stakers(trader2);
     //     const stakeholder4 = await pool.stakeHolders.call(1);
-    //     const stakedBalance4 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance4 = await pool._stakedBalances(trader2);
     //     const percentageOfPool4 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens4["cycleJoined"].toString() === "1");
@@ -705,134 +706,134 @@ contract('PoolOne', (accounts) => {
     //     assert(totalPoolTokens4.toString() === "0");
     // });
 
-    // it('Test 11: Player 2 shares in the rewards of round 1, should deposit tokens in each half of first round and first half of second round', async () => {
-    //     const amount = web3.utils.toWei('1');
-    //     await increaseTime(1);
+    it('Test 11: Player 2 shares in the rewards of round 1, should deposit tokens in each half of first round and first half of second round', async () => {
+        const amount = web3.utils.toWei('1');
+        await increaseTime(1);
 
-    //     await pool.stake(//beginning of first cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
+        await pool.stake(//beginning of first cycle
+            amount,
+            {from: trader1}
+        );
 
-    //     await pool.stake(//beginning of first cycle
-    //         amount,
-    //         {from: trader2}
-    //     );
+        await pool.stake(//beginning of first cycle
+            amount,
+            {from: trader2}
+        );
 
-    //     await increaseTime(17);
+        await increaseTime(17);
 
-    //     await pool.stake(//end of first cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
+        await pool.stake(//end of first cycle
+            amount,
+            {from: trader1}
+        );
 
-    //     await increaseTime(17);
+        await increaseTime(17);
 
-    //     await pool.stake(//beginning of 2nd cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
+        await pool.stake(//beginning of 2nd cycle
+            amount,
+            {from: trader1}
+        );
 
-    //     const traderPoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
-    //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
+        const traderPoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        const stakedBalance = await pool._stakedBalances(trader1);
+        const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
-    //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens["numberOfDeposits"].toString() === "3");
-    //     assert(traderPoolTokens["poolTokens"].toString() === "3000", "number of pooltokens for trader1 should be 3000 "+ traderPoolTokens["poolTokens"]);
-    //     assert(traderPoolTokens["pendingTokens"].toString() === "0");
-    //     assert(traderPoolTokens["rewards"].toString() === web3.utils.toWei('625'), traderPoolTokens["rewards"].toString());
-    //     assert(traderPoolTokens["totalRewards"].toString() === web3.utils.toWei('625'));
+        assert(traderPoolTokens["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens["numberOfDeposits"].toString() === "3");
+        assert(traderPoolTokens["poolTokens"].toString() === "3000", "number of pooltokens for trader1 should be 3000 "+ traderPoolTokens["poolTokens"]);
+        assert(traderPoolTokens["pendingTokens"].toString() === "0");
+        assert(traderPoolTokens["rewards"].toString() === web3.utils.toWei('625'), traderPoolTokens["rewards"].toString());
+        assert(traderPoolTokens["totalRewards"].toString() === web3.utils.toWei('625'));
 
-    //     assert(stakedBalance.toString() === web3.utils.toWei('2.875'), stakedBalance.toString());
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool.toString() === "7500", percentageOfPool.toString());
+        // assert(stakedBalance.toString() === web3.utils.toWei('2.875'), stakedBalance.toString());
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool.toString() === "7500", percentageOfPool.toString());
 
-    //     const traderPoolTokens2 = await pool.stakers(trader2);
-    //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
-    //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
+        const traderPoolTokens2 = await pool.stakers(trader2);
+        const stakeholder2 = await pool.stakeHolders.call(1);
+        const stakedBalance2 = await pool._stakedBalances(trader2);
+        const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
-    //     assert(traderPoolTokens2["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens2["numberOfDeposits"].toString() === "1");
-    //     assert(traderPoolTokens2["poolTokens"].toString() === "1000", "number of pooltokens for trader1 should be 1000 "+ traderPoolTokens["poolTokens"]);
-    //     assert(traderPoolTokens2["pendingTokens"].toString() === "0");
-    //     assert(traderPoolTokens2["rewards"].toString() === web3.utils.toWei('625'));
-    //     assert(traderPoolTokens2["totalRewards"].toString() === web3.utils.toWei('625'));
+        assert(traderPoolTokens2["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens2["numberOfDeposits"].toString() === "1");
+        assert(traderPoolTokens2["poolTokens"].toString() === "1000", "number of pooltokens for trader1 should be 1000 "+ traderPoolTokens["poolTokens"]);
+        assert(traderPoolTokens2["pendingTokens"].toString() === "0");
+        assert(traderPoolTokens2["rewards"].toString() === web3.utils.toWei('625'));
+        assert(traderPoolTokens2["totalRewards"].toString() === web3.utils.toWei('625'));
 
-    //     assert(stakedBalance2.toString() === web3.utils.toWei('1'));
-    //     assert(stakeholder2.toString() === trader2);
-    //     assert(percentageOfPool2.toString() === "2500", percentageOfPool2.toString());
-    // });
+        // assert(stakedBalance2.toString() === web3.utils.toWei('1'));
+        assert(stakeholder2.toString() === trader2);
+        assert(percentageOfPool2.toString() === "2500", percentageOfPool2.toString());
+    });
 
-    // it('Test 12: Player 2 shares in the rewards of round 1, should deposit tokens in each half of first round and first round of second round, player 2 puts more in the third round ', async () => {
-    //     const amount = web3.utils.toWei('1');
-    //     await increaseTime(1);
+    it('Test 12: Player 2 shares in the rewards of round 1, should deposit tokens in each half of first round and first round of second round, player 2 puts more in the third round ', async () => {
+        const amount = web3.utils.toWei('1');
+        await increaseTime(1);
 
-    //     await pool.stake(//beginning of first cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
+        await pool.stake(//beginning of first cycle
+            amount,
+            {from: trader1}
+        );
 
-    //     await pool.stake(//beginning of first cycle
-    //         amount,
-    //         {from: trader2}
-    //     );
+        await pool.stake(//beginning of first cycle
+            amount,
+            {from: trader2}
+        );
 
-    //     await increaseTime(17);
+        await increaseTime(17);
 
-    //     await pool.stake(//end of first cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
+        await pool.stake(//end of first cycle
+            amount,
+            {from: trader1}
+        );
 
-    //     await increaseTime(17);
+        await increaseTime(17);
 
-    //     await pool.stake(//beginning of 2nd cycle
-    //         amount,
-    //         {from: trader1}
-    //     );
+        await pool.stake(//beginning of 2nd cycle
+            amount,
+            {from: trader1}
+        );
 
-    //     await increaseTime(30);
+        await increaseTime(30);
 
-    //     await pool.stake(//beginning of 3rd cycle
-    //         amount,
-    //         {from: trader2}
-    //     );
+        await pool.stake(//beginning of 3rd cycle
+            amount,
+            {from: trader2}
+        );
 
-    //     const traderPoolTokens = await pool.stakers(trader1);
-    //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
-    //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
+        const traderPoolTokens = await pool.stakers(trader1);
+        const stakeholder1 = await pool.stakeHolders.call(0);
+        // const stakedBalance = await pool._stakedBalances(trader1);
+        const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
-    //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens["numberOfDeposits"].toString() === "3");
-    //     assert(traderPoolTokens["poolTokens"].toString() === "3000", "number of pooltokens for trader1 should be 3000 "+ traderPoolTokens["poolTokens"]);
-    //     assert(traderPoolTokens["pendingTokens"].toString() === "0");
-    //     assert(traderPoolTokens["rewards"].toString() === web3.utils.toWei('1562.5'));
-    //     assert(traderPoolTokens["totalRewards"].toString() === web3.utils.toWei('1562.5'));
+        assert(traderPoolTokens["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens["numberOfDeposits"].toString() === "3");
+        assert(traderPoolTokens["poolTokens"].toString() === "3000", "number of pooltokens for trader1 should be 3000 "+ traderPoolTokens["poolTokens"]);
+        assert(traderPoolTokens["pendingTokens"].toString() === "0");
+        assert(traderPoolTokens["rewards"].toString() === web3.utils.toWei('1562.5'));
+        assert(traderPoolTokens["totalRewards"].toString() === web3.utils.toWei('1562.5'));
 
-    //     assert(stakedBalance.toString() === "2899999999999999000", stakedBalance.toString());
-    //     assert(stakeholder1.toString() === trader1);
-    //     assert(percentageOfPool.toString() === "6000", percentageOfPool.toString());
+        // assert(stakedBalance.toString() === "2899999999999999000", stakedBalance.toString());
+        assert(stakeholder1.toString() === trader1);
+        assert(percentageOfPool.toString() === "6000", percentageOfPool.toString());
 
-    //     const traderPoolTokens2 = await pool.stakers(trader2);
-    //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
-    //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
+        const traderPoolTokens2 = await pool.stakers(trader2);
+        const stakeholder2 = await pool.stakeHolders.call(1);
+        const stakedBalance2 = await pool._stakedBalances(trader2);
+        const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
-    //     assert(traderPoolTokens2["cycleJoined"].toString() === "1");
-    //     assert(traderPoolTokens2["numberOfDeposits"].toString() === "2");
-    //     assert(traderPoolTokens2["poolTokens"].toString() === "2000", "number of pooltokens for trader1 should be 2000 "+ traderPoolTokens["poolTokens"]);
-    //     assert(traderPoolTokens2["pendingTokens"].toString() === "0");
-    //     assert(traderPoolTokens2["rewards"].toString() === web3.utils.toWei('937.5'));
-    //     assert(traderPoolTokens2["totalRewards"].toString() === web3.utils.toWei('937.5'));
+        assert(traderPoolTokens2["cycleJoined"].toString() === "1");
+        assert(traderPoolTokens2["numberOfDeposits"].toString() === "2");
+        assert(traderPoolTokens2["poolTokens"].toString() === "2000", "number of pooltokens for trader1 should be 2000 "+ traderPoolTokens["poolTokens"]);
+        assert(traderPoolTokens2["pendingTokens"].toString() === "0");
+        assert(traderPoolTokens2["rewards"].toString() === web3.utils.toWei('937.5'));
+        assert(traderPoolTokens2["totalRewards"].toString() === web3.utils.toWei('937.5'));
 
-    //     assert(stakedBalance2.toString() === web3.utils.toWei('1.95'), stakedBalance2.toString());
-    //     assert(stakeholder2.toString() === trader2);
-    //     assert(percentageOfPool2.toString() === "4000", percentageOfPool2.toString());
-    // });
+        // assert(stakedBalance2.toString() === web3.utils.toWei('1.95'), stakedBalance2.toString());
+        assert(stakeholder2.toString() === trader2);
+        assert(percentageOfPool2.toString() === "4000", percentageOfPool2.toString());
+    });
 
     // it('Test 13: Player 2 shares in the rewards of round 1, should deposit tokens in each half of first round and first round of second round, player 2 puts more in the third round and withdraws at the end', async () => {
     //     const amount = web3.utils.toWei('1');
@@ -857,7 +858,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens11 = await pool.stakers(trader1);
     //     const stakeholder11 = await pool.stakeHolders.call(0);
-    //     const stakedBalance11 = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance11 = await pool._stakedBalances(trader1);
     //     const percentageOfPool11 = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens11["cycleJoined"].toString() === "1");
@@ -873,7 +874,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens21 = await pool.stakers(trader2);
     //     const stakeholder21 = await pool.stakeHolders.call(1);
-    //     const stakedBalance21 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance21 = await pool._stakedBalances(trader2);
     //     const percentageOfPool21 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens21["cycleJoined"].toString() === "1");
@@ -896,7 +897,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens12 = await pool.stakers(trader1);
     //     const stakeholder12 = await pool.stakeHolders.call(0);
-    //     const stakedBalance12 = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance12 = await pool._stakedBalances(trader1);
     //     const percentageOfPool12 = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens12["cycleJoined"].toString() === "1");
@@ -912,7 +913,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens22 = await pool.stakers(trader2);
     //     const stakeholder22 = await pool.stakeHolders.call(1);
-    //     const stakedBalance22 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance22 = await pool._stakedBalances(trader2);
     //     const percentageOfPool22 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens22["cycleJoined"].toString() === "1");
@@ -942,7 +943,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens13 = await pool.stakers(trader1);
     //     const stakeholder13 = await pool.stakeHolders.call(0);
-    //     const stakedBalance13 = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance13 = await pool._stakedBalances(trader1);
     //     const percentageOfPool13 = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens13["cycleJoined"].toString() === "1");
@@ -958,7 +959,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens23 = await pool.stakers(trader2);
     //     const stakeholder23 = await pool.stakeHolders.call(1);
-    //     const stakedBalance23 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance23 = await pool._stakedBalances(trader2);
     //     const percentageOfPool23 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens23["cycleJoined"].toString() === "1");
@@ -987,7 +988,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens14 = await pool.stakers(trader1);
     //     const stakeholder14 = await pool.stakeHolders.call(0);
-    //     const stakedBalance14 = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance14 = await pool._stakedBalances(trader1);
     //     const percentageOfPool14 = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens14["cycleJoined"].toString() === "1");
@@ -1003,7 +1004,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens24 = await pool.stakers(trader2);
     //     const stakeholder24 = await pool.stakeHolders.call(1);
-    //     const stakedBalance24 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance24 = await pool._stakedBalances(trader2);
     //     const percentageOfPool24 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens24["cycleJoined"].toString() === "1");
@@ -1051,7 +1052,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
@@ -1067,7 +1068,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "1");
@@ -1123,7 +1124,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
     //     const currentCycle = await pool.currentCycle.call()
@@ -1146,7 +1147,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "2");
@@ -1199,7 +1200,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens["cycleJoined"].toString() === "3");
@@ -1215,7 +1216,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "3");
@@ -1271,7 +1272,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens["cycleJoined"].toString() === "3", "joined at " + traderPoolTokens["cycleJoined"].toString());
@@ -1287,7 +1288,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "3", traderPoolTokens2["cycleJoined"].toString());
@@ -1343,7 +1344,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens["cycleJoined"].toString() === "3");
@@ -1359,7 +1360,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "3");
@@ -1409,7 +1410,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens["cycleJoined"].toString() === "1");
@@ -1425,7 +1426,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "3");
@@ -1463,7 +1464,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens1 = await pool.stakers(trader1);
     //     const stakeholder11 = await pool.stakeHolders.call(0);
-    //     const stakedBalance1 = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance1 = await pool._stakedBalances(trader1);
     //     const percentageOfPool1 = await pool.percentageOfPool.call(trader1)
     //     // console.log(traderPoolTokens1["cycleJoined"].toString())
     //     // console.log(traderPoolTokens1["numberOfDeposits"].toString())
@@ -1496,7 +1497,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens22 = await pool.stakers(trader2);
     //     const stakeholder22 = await pool.stakeHolders.call(1);
-    //     const stakedBalance22 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance22 = await pool._stakedBalances(trader2);
     //     const percentageOfPool22 = await pool.percentageOfPool.call(trader2)
     //     // console.log(traderPoolTokens22["totalRewards"].toString())
     //     const rpt = await pool.getCycleRewardsPerToken()
@@ -1561,7 +1562,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens["cycleJoined"].toString() === "3");
@@ -1577,7 +1578,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "3");
@@ -1639,7 +1640,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens = await pool.stakers(trader1);
     //     const stakeholder1 = await pool.stakeHolders.call(0);
-    //     const stakedBalance = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance = await pool._stakedBalances(trader1);
     //     const percentageOfPool = await pool.percentageOfPool.call(trader1)
     //     // const stakeholder3 = await pool.stakeHolders.call(2);
 
@@ -1656,7 +1657,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens2 = await pool.stakers(trader2);
     //     const stakeholder2 = await pool.stakeHolders.call(1);
-    //     const stakedBalance2 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance2 = await pool._stakedBalances(trader2);
     //     const percentageOfPool2 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens2["cycleJoined"].toString() === "4");
@@ -1708,7 +1709,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens41 = await pool.stakers(trader1);
     //     const stakeholder41 = await pool.stakeHolders.call(0);
-    //     const stakedBalance41 = await pool.stakedBalances.call(trader1);
+    //     const stakedBalance41 = await pool._stakedBalances(trader1);
     //     const percentageOfPool41 = await pool.percentageOfPool.call(trader1)
 
     //     assert(traderPoolTokens41["cycleJoined"].toString() === "1");
@@ -1727,7 +1728,7 @@ contract('PoolOne', (accounts) => {
     //         { from: trader2 }
     //     );
 
-    //     const stakedBalanceNumberTwo = await pool.stakedBalances.call(trader2);
+    //     const stakedBalanceNumberTwo = await pool._stakedBalances(trader2);
     //     assert(stakedBalanceNumberTwo.toString() === "1929166666666666000", stakedBalanceNumberTwo.toString());//TODO: check the math on this
 
     //     await increaseTime(1202); //game over
@@ -1755,7 +1756,7 @@ contract('PoolOne', (accounts) => {
 
     //     const traderPoolTokens42 = await pool.stakers(trader2);
     //     const stakeholder42 = await pool.stakeHolders.call(1);
-    //     const stakedBalance42 = await pool.stakedBalances.call(trader2);
+    //     const stakedBalance42 = await pool._stakedBalances(trader2);
     //     const percentageOfPool42 = await pool.percentageOfPool.call(trader2)
 
     //     assert(traderPoolTokens42["cycleJoined"].toString() === "1");
@@ -1774,7 +1775,7 @@ contract('PoolOne', (accounts) => {
     //     const t2balance = await crypt.balanceOf.call(trader2)
     //     assert(t2balance.toString() === "999832708333333332700", t2balance.toString()); //TODO: Rewards separate
 
-    //     const stakedBalanceNumberOne = await pool.stakedBalances.call(trader1);
+    //     const stakedBalanceNumberOne = await pool._stakedBalances(trader1);
     //     assert(stakedBalanceNumberOne.toString() === "1982447916666665000", stakedBalanceNumberOne.toString());//TODO: check the math on this
 
     //     await pool.withdraw(//beginning of 1st cycle
@@ -1800,6 +1801,7 @@ contract('PoolOne', (accounts) => {
     //         { from: trader4 }
     //     );
     // });
+
     // try four in first round
     // try four in each round
     // try four in each round with two continuously adding funds each round
