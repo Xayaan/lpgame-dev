@@ -266,12 +266,15 @@ contract PoolOne is ReentrancyGuard {
         uint256 newStakedAmount = amount.sub(reflectedTaxAmount);
         rTotalSupplyNew += newStakedAmount;
         // fTotalSupplyNew += rTotalSupplyNew.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupplyNew);
-        if (rTotalSupply > 0 && fTotalSupply > 0) {
-            fTotalSupplyNew += fTotalSupply.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupply);
+        if (rTotalSupply > 0 && fTotalSupply > 0
+            && !(lastStaker == msg.sender && lastStakedAmount == stakedBalances[msg.sender]))
+        {
+            fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
+            stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
         } else {
             fTotalSupplyNew += rTotalSupplyNew;
+            stakedBalances[msg.sender] += newStakedAmount;
         }
-        stakedBalances[msg.sender] += newStakedAmount;
 
         // Keep top 20 stakers
         bool alreadyAdded = false;
@@ -341,7 +344,7 @@ contract PoolOne is ReentrancyGuard {
         totalPoolTokens = totalPoolTokens.add(holder.poolTokens); // we remove all the pool tokens earlier to rebalance, we have to make sure we add again
         holder.pendingTokens = pendingTokens;
 
-        totalStaked = totalStaked.sub(amount);
+        // totalStaked = totalStaked.sub(amount);
         totalReflected += reflectedTaxAmount;
         emit WithdrawalEvent(msg.sender, withdrawAmount);
     }
