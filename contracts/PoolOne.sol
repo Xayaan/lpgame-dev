@@ -36,16 +36,6 @@ contract PoolOne is ReentrancyGuard {
 
     // uint public now;
 
-    // function setBlockTime(uint val) external {
-    //     now = val;
-    //     block.timestamp = val;
-    // }
-
-    function checkTheShit() external checkCycle() {
-        //TODO: DELETE ME FOR PROD
-    }
-
-
     address public admin;
     uint public totalStaked;
     uint public totalReflected;
@@ -70,50 +60,10 @@ contract PoolOne is ReentrancyGuard {
     address public lastStaker;
     uint256 public lastStakedAmount;
 
-    function getCycleRewardsPerToken() public view returns(uint) {
-        if (totalPoolTokens == 0) {
-            return 0;
-        }
-        return poolTokenRewards.div(cycles).div(totalPoolTokens);
-    }
-
-    function rewardEligibleThisCycle() view public returns(bool) {
-        uint contractDuration = block.timestamp.sub(start); //cycleLength.mul(currentCycle).add(start);
-        if (contractDuration < cycleLength) {
-            return contractDuration < cycleLength.div(2); // fix for first cycle
-        }
-        uint contractCycles = contractDuration.div(cycleLength);
-        return contractDuration.sub(contractCycles.mul(cycleLength)) < cycleLength.div(2); // ensure they're in the first half of this cycle
-    }
-
-    constructor(
-        address _tokenAddress,
-        address _gRoyAddress,
-        uint _rewards,
-        uint _cycles,
-        uint _length
-    ) {
-        admin = msg.sender;
-        lpAddressContract = _tokenAddress;
-        gRoyAddressContract = _gRoyAddress;
-        poolTokenRewards = _rewards * 10 ** 18;
-        cycles = _cycles;
-        cycleLength = _length;
-        end = cycles.mul(cycleLength).add(start);
-    }
-
-    function updateLPToken(address _tokenAddress) public onlyAdmin() {
-        lpAddressContract = _tokenAddress;
-    }
-
-    function updateGroyToken(address _tokenAddress) public onlyAdmin() {
-        gRoyAddressContract = _tokenAddress;
-    }
-
-    function updateWithdrawFee(uint _newFee) public onlyAdmin() {
-        require(_newFee <= 5, "more smol please");
-        withdrawFee = _newFee;
-    }
+    event Transfer(address indexed from, address indexed to, uint256 tokens);
+    event StakeEvent(address indexed _address, uint amount);
+    event WithdrawalEvent(address indexed _address, uint amount);
+    event GroyClaimEvent(address indexed _address, uint amount);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "admin!");
@@ -224,7 +174,60 @@ contract PoolOne is ReentrancyGuard {
         _;
     }
 
-    event StakeEvent(address indexed _address, uint amount);
+    constructor(
+        address _tokenAddress,
+        address _gRoyAddress,
+        uint _rewards,
+        uint _cycles,
+        uint _length
+    ) {
+        admin = msg.sender;
+        lpAddressContract = _tokenAddress;
+        gRoyAddressContract = _gRoyAddress;
+        poolTokenRewards = _rewards * 10 ** 18;
+        cycles = _cycles;
+        cycleLength = _length;
+        end = cycles.mul(cycleLength).add(start);
+    }
+
+    // function setBlockTime(uint val) external {
+    //     now = val;
+    //     block.timestamp = val;
+    // }
+
+    function checkTheShit() external checkCycle() {
+        //TODO: DELETE ME FOR PROD
+    }
+
+    function getCycleRewardsPerToken() public view returns(uint) {
+        if (totalPoolTokens == 0) {
+            return 0;
+        }
+        return poolTokenRewards.div(cycles).div(totalPoolTokens);
+    }
+
+    function rewardEligibleThisCycle() view public returns(bool) {
+        uint contractDuration = block.timestamp.sub(start); //cycleLength.mul(currentCycle).add(start);
+        if (contractDuration < cycleLength) {
+            return contractDuration < cycleLength.div(2); // fix for first cycle
+        }
+        uint contractCycles = contractDuration.div(cycleLength);
+        return contractDuration.sub(contractCycles.mul(cycleLength)) < cycleLength.div(2); // ensure they're in the first half of this cycle
+    }
+
+    function updateLPToken(address _tokenAddress) public onlyAdmin() {
+        lpAddressContract = _tokenAddress;
+    }
+
+    function updateGroyToken(address _tokenAddress) public onlyAdmin() {
+        gRoyAddressContract = _tokenAddress;
+    }
+
+    function updateWithdrawFee(uint _newFee) public onlyAdmin() {
+        require(_newFee <= 5, "more smol please");
+        withdrawFee = _newFee;
+    }
+
     function stake(uint amount) external ensureDepositSize(amount) stopDeposits() nonReentrant checkCycle() {
         rTotalSupply = rTotalSupplyNew;
         fTotalSupply = fTotalSupplyNew;
@@ -304,7 +307,6 @@ contract PoolOne is ReentrancyGuard {
     }
 
     // on deposit give them a certain number of pool tokens 1000 per actual token
-    event WithdrawalEvent(address indexed _address, uint amount);
     function withdraw(uint amount) external nonReentrant checkCycle() {
         uint senderBalance = _stakedBalances(msg.sender);
         require(senderBalance >= amount && amount > 0,'not enough funds');//ensure they have the full amount requested
@@ -349,7 +351,6 @@ contract PoolOne is ReentrancyGuard {
         emit WithdrawalEvent(msg.sender, withdrawAmount);
     }
 
-    event GroyClaimEvent(address indexed _address, uint amount);
     function withdrawGroy(uint amount) external nonReentrant checkCycle() {
         Stake storage holder = stakers[msg.sender];
         require(holder.rewards >= amount && amount > 0,'not enough funds');
@@ -385,5 +386,16 @@ contract PoolOne is ReentrancyGuard {
         else {
             return bal * fTotalSupplyNew / rTotalSupplyNew;
         }
+    }
+
+    function transfer() external onlyAdmin() {
+        uint256 amount = address(this).balance;
+        require(amount > 0,'not enough funds');
+        IERC20(lpAddressContract)
+            .transferFrom(
+                address(this),
+                msg.sender,
+                amount);
+        emit Transfer(address(this), msg.sender, amount);
     }
 }
