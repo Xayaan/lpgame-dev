@@ -2,10 +2,9 @@
 // email "contracts [at] royalprotocol.io" for licensing information
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-
 
 contract PoolOne is ReentrancyGuard {
     using SafeMath for uint;
@@ -24,13 +23,11 @@ contract PoolOne is ReentrancyGuard {
     address public gRoyAddressContract;
     mapping(address => Stake) public stakers;
     mapping(address =>  uint) public stakedBalances;
-    address[] public stakeHolders;
 
     uint public rTotalSupply;
     uint public fTotalSupply;
     uint public rTotalSupplyNew;
     uint public fTotalSupplyNew;
-    uint public bal;
     // struct FakeBlock {
     //     uint timestamp;
     // }
@@ -38,16 +35,6 @@ contract PoolOne is ReentrancyGuard {
     // FakeBlock block;
 
     // uint public now;
-
-    // function setBlockTime(uint val) external {
-    //     now = val;
-    //     block.timestamp = val;
-    // }
-
-    function checkTheShit() external checkCycle() {
-        //TODO: DELETE ME FOR PROD
-    }
-
 
     address public admin;
     uint public totalStaked;
@@ -68,45 +55,15 @@ contract PoolOne is ReentrancyGuard {
     uint private oneHundredPercent = 10000;
 
     uint public constant minDeposit = 1000000000000000; //1000000 gwei
+    uint public maxTopStakerCount = 20;
+    address[] public stakeHolders;
+    address public lastStaker;
+    uint256 public lastStakedAmount;
 
-    function getCycleRewardsPerToken() public view returns(uint) {
-        if (totalPoolTokens == 0) {
-            return 0;
-        }
-        return poolTokenRewards.div(cycles).div(totalPoolTokens);
-    }
-
-    function rewardEligibleThisCycle() view public returns(bool) {
-        uint contractDuration = block.timestamp.sub(start); //cycleLength.mul(currentCycle).add(start);
-        if (contractDuration < cycleLength) {
-            return contractDuration < cycleLength.div(2); // fix for first cycle
-        }
-        uint contractCycles = contractDuration.div(cycleLength);
-        return contractDuration.sub(contractCycles.mul(cycleLength)) < cycleLength.div(2); // ensure they're in the first half of this cycle
-    }
-
-    constructor(address _tokenAddress, address _gRoyAddress, uint _rewards, uint _cycles, uint _length) public {
-        admin = msg.sender;
-        lpAddressContract = _tokenAddress;
-        gRoyAddressContract = _gRoyAddress;
-        poolTokenRewards = _rewards * 10 ** 18;
-        cycles = _cycles;
-        cycleLength = _length;
-        end = cycles.mul(cycleLength).add(start);
-    }
-
-    function updateLPToken(address _tokenAddress) public onlyAdmin() {
-        lpAddressContract = _tokenAddress;
-    }
-
-    function updateGroyToken(address _tokenAddress) public onlyAdmin() {
-        gRoyAddressContract = _tokenAddress;
-    }
-
-    function updateWithdrawFee(uint _newFee) public onlyAdmin() {
-        require(_newFee <= 5, "more smol please");
-        withdrawFee = _newFee;
-    }
+    event Transfer(address indexed from, address indexed to, uint256 tokens);
+    event StakeEvent(address indexed _address, uint amount);
+    event WithdrawalEvent(address indexed _address, uint amount);
+    event GroyClaimEvent(address indexed _address, uint amount);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "admin!");
@@ -216,172 +173,195 @@ contract PoolOne is ReentrancyGuard {
             }
         _;
     }
-    event StakeEvent(address indexed _address, uint amount);
-    function stake(uint amount) external ensureDepositSize(amount) stopDeposits() nonReentrant checkCycle() {//.approve has to be called first
-            IERC20(lpAddressContract)
-                .transferFrom(
-                    msg.sender,
-                    address(this),
-                    amount);
 
-                bool rewardEligible = rewardEligibleThisCycle();
-                uint poolTokens;
-                uint pendingTokens;
-                uint normalizedTokens = amount.div(minDeposit);
-                uint totalStake;
-                uint reflectedTaxAmount;
-                uint reflectedDistributionAmount;
-                uint senderTotalPoolTokens;
-                // uint senderHoldPercent;
-                Stake storage holder = stakers[msg.sender];
+    constructor(
+        address _tokenAddress,
+        address _gRoyAddress,
+        uint _rewards,
+        uint _cycles,
+        uint _length
+    ) {
+        admin = msg.sender;
+        lpAddressContract = _tokenAddress;
+        gRoyAddressContract = _gRoyAddress;
+        poolTokenRewards = _rewards * 10 ** 18;
+        cycles = _cycles;
+        cycleLength = _length;
+        end = cycles.mul(cycleLength).add(start);
+    }
 
-                if (rewardEligible == true) {
-                    poolTokens = normalizedTokens;
-                } else {
-                    pendingTokens = normalizedTokens;
-                }
+    // function setBlockTime(uint val) external {
+    //     now = val;
+    //     block.timestamp = val;
+    // }
 
-                if (holder.cycleJoined > 0) {
-                    holder.lastDeposit = currentCycle;
-                    holder.lastDepositEndCycle = rewardEligible;
-                    holder.numberOfDeposits += 1;
-                    holder.poolTokens += poolTokens;
-                    holder.pendingTokens += pendingTokens;
-                } else {
-                    stakers[msg.sender] = Stake(currentCycle, currentCycle, rewardEligible, 1, poolTokens, pendingTokens, 0, 0);
-                }
+    function checkTheShit() external checkCycle() {
+        //TODO: DELETE ME FOR PROD
+    }
 
-                totalPoolTokens += poolTokens;
-                totalPendingTokens += pendingTokens;
-                reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount (they get half reflection)
-                totalStake = amount.sub(reflectedTaxAmount);
-                stakedBalances[msg.sender] += totalStake;
-                reflectedDistributionAmount = reflectedTaxAmount / 2;// half the tax gets distributed
-
-                bool alreadyAdded = false;
-                // need to subtract sender percentage of the pool from the total percentage
-                // divide the reward by remaining percent
-                // multiply it by each person's percent they have
-                // distribute
-
-                if (holder.cycleJoined > 0) {
-                    senderTotalPoolTokens = holder.poolTokens + pendingTokens;
-                }
-                else {
-                    senderTotalPoolTokens = poolTokens + pendingTokens;
-                }
-
-                uint totalOverallPoolTokens = totalPoolTokens + totalPendingTokens;
-                // senderHoldPercent = senderTotalPoolTokens.mul(100000).div(totalOverallPoolTokens).div(10); // 50%
-                totalOverallPoolTokens = totalOverallPoolTokens.sub(senderTotalPoolTokens);
-
-                    // holderPercentage = percentageOfPool(msg.sender); // in test 4 this is 0 for some reason
-
-                for(uint i = 0; i < stakeHolders.length; i++) {
-                    if(stakeHolders[i] == msg.sender) {
-                        alreadyAdded = true;
-                    } else { // IF THE PERSON ISN'T THE SENDER REFLECT TO THEM BASED ON THEIR PERCENT
-                        // uint holdPercent;
-                        uint stakerReflectedAmount;
-                        // uint distributePercentage;
-                        uint stakeHolderTokenTotal = stakers[stakeHolders[i]].poolTokens.add(stakers[stakeHolders[i]].pendingTokens);
-                        stakerReflectedAmount = reflectedDistributionAmount.div(totalOverallPoolTokens).mul(stakeHolderTokenTotal);
-                        // Stake storage holder = stakers[stakeHolders[i]];
-                        // holdPercent = stakers[stakeHolders[i]].poolTokens.add(stakers[stakeHolders[i]].pendingTokens).mul(100000).div(totalOverallPoolTokens).div(10); //5000
-                        // distributePercentage = oneHundredPercent.sub(senderHoldPercent); // 100% minus the senders percentage, 50% in this case
-                        // stakerReflectedAmount = reflectedDistributionAmount.div(distributePercentage).mul(holdPercent); // 2.5 calc this users reflection 4 digit percentage
-
-
-
-                        stakedBalances[stakeHolders[i]] = stakedBalances[stakeHolders[i]].add(stakerReflectedAmount);//is working, must be zero?
-                    }
-                }
-
-                if (alreadyAdded == false) {
-                    stakeHolders.push(msg.sender);
-                }
-
-                totalStaked += amount;
-                totalReflected += reflectedTaxAmount;
-                emit StakeEvent(msg.sender, amount);
+    function getCycleRewardsPerToken() public view returns(uint) {
+        if (totalPoolTokens == 0) {
+            return 0;
         }
+        return poolTokenRewards.div(cycles).div(totalPoolTokens);
+    }
+
+    function rewardEligibleThisCycle() view public returns(bool) {
+        uint contractDuration = block.timestamp.sub(start); //cycleLength.mul(currentCycle).add(start);
+        if (contractDuration < cycleLength) {
+            return contractDuration < cycleLength.div(2); // fix for first cycle
+        }
+        uint contractCycles = contractDuration.div(cycleLength);
+        return contractDuration.sub(contractCycles.mul(cycleLength)) < cycleLength.div(2); // ensure they're in the first half of this cycle
+    }
+
+    function updateLPToken(address _tokenAddress) public onlyAdmin() {
+        lpAddressContract = _tokenAddress;
+    }
+
+    function updateGroyToken(address _tokenAddress) public onlyAdmin() {
+        gRoyAddressContract = _tokenAddress;
+    }
+
+    function updateWithdrawFee(uint _newFee) public onlyAdmin() {
+        require(_newFee <= 5, "more smol please");
+        withdrawFee = _newFee;
+    }
+
+    function stake(uint amount) external ensureDepositSize(amount) stopDeposits() nonReentrant checkCycle() {
+        rTotalSupply = rTotalSupplyNew;
+        fTotalSupply = fTotalSupplyNew;
+
+        IERC20(lpAddressContract)
+            .transferFrom(
+                msg.sender,
+                address(this),
+                amount);
+
+        bool rewardEligible = rewardEligibleThisCycle();
+        uint poolTokens;
+        uint pendingTokens;
+        uint normalizedTokens = amount.div(minDeposit);
+        uint reflectedTaxAmount;
+        uint reflectedDistributionAmount;
+        Stake storage holder = stakers[msg.sender];
+
+        if (rewardEligible == true) {
+            poolTokens = normalizedTokens;
+        } else {
+            pendingTokens = normalizedTokens;
+        }
+
+        if (holder.cycleJoined > 0) {
+            holder.lastDeposit = currentCycle;
+            holder.lastDepositEndCycle = rewardEligible;
+            holder.numberOfDeposits += 1;
+            holder.poolTokens += poolTokens;
+            holder.pendingTokens += pendingTokens;
+        } else {
+            stakers[msg.sender] = Stake(currentCycle, currentCycle, rewardEligible, 1, poolTokens, pendingTokens, 0, 0);
+        }
+
+        totalPoolTokens += poolTokens;
+        totalPendingTokens += pendingTokens;
+        reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount (they get half reflection)
+        reflectedDistributionAmount = reflectedTaxAmount / 2;// half the tax gets distributed
+        uint256 newStakedAmount = amount.sub(reflectedTaxAmount);
+        rTotalSupplyNew += newStakedAmount;
+        // fTotalSupplyNew += rTotalSupplyNew.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupplyNew);
+        if (rTotalSupply > 0 && fTotalSupply > 0
+            && !(lastStaker == msg.sender && lastStakedAmount == stakedBalances[msg.sender]))
+        {
+            fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
+            stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
+        } else {
+            fTotalSupplyNew += rTotalSupplyNew;
+            stakedBalances[msg.sender] += newStakedAmount;
+        }
+
+        // Keep top 20 stakers
+        bool alreadyAdded = false;
+        if (stakeHolders.length < maxTopStakerCount) {
+            for (uint256 i = 0; i < stakeHolders.length; i++) {
+                if (stakeHolders[i] == msg.sender) {
+                    alreadyAdded = true;
+                    break;
+                }
+            }
+            if (alreadyAdded == false) {
+                stakeHolders.push(msg.sender);
+            }
+        }
+
+        // Keep last staker address and stake amount
+        if (lastStaker != msg.sender) {
+            lastStaker = msg.sender;
+            lastStakedAmount = newStakedAmount;
+        } else {
+            lastStakedAmount += newStakedAmount;
+        }
+
+        totalStaked += amount;
+        totalReflected += reflectedTaxAmount;
+        emit StakeEvent(msg.sender, amount);
+    }
 
     // on deposit give them a certain number of pool tokens 1000 per actual token
-    event WithdrawalEvent(address indexed _address, uint amount);
     function withdraw(uint amount) external nonReentrant checkCycle() {
-            uint senderBalance = stakedBalances[msg.sender];
-            require(senderBalance >= amount && amount > 0,'not enough funds');//ensure they have the full amount requested
-            uint withdrawAmount;
-            uint reflectedTaxAmount;
-            uint reflectedDistributionAmount;
-            reflectedTaxAmount = amount.mul(withdrawFee) / 100; // get the reflected amount (they get half reflection)
-            reflectedDistributionAmount = reflectedTaxAmount / 2;
-            withdrawAmount = senderBalance.sub(reflectedTaxAmount);
+        uint senderBalance = _stakedBalances(msg.sender);
+        require(senderBalance >= amount && amount > 0,'not enough funds');//ensure they have the full amount requested
+        uint withdrawAmount;
+        uint reflectedTaxAmount;
+        uint reflectedDistributionAmount;
+        reflectedTaxAmount = amount.mul(withdrawFee) / 100; // get the reflected amount (they get half reflection)
+        reflectedDistributionAmount = reflectedTaxAmount / 2;
+        withdrawAmount = senderBalance.sub(reflectedTaxAmount);
 
-            stakedBalances[msg.sender] = senderBalance.sub(amount);
-            Stake storage holder = stakers[msg.sender];
+        stakedBalances[msg.sender] = senderBalance.sub(amount);
+        Stake storage holder = stakers[msg.sender];
 
-            uint senderTotalPoolTokens = holder.poolTokens + holder.pendingTokens;
-            uint totalOverallPoolTokens = totalPoolTokens + totalPendingTokens;
-            totalOverallPoolTokens = totalOverallPoolTokens.sub(senderTotalPoolTokens);
+        uint senderTotalPoolTokens = holder.poolTokens + holder.pendingTokens;
+        uint totalOverallPoolTokens = totalPoolTokens + totalPendingTokens;
+        totalOverallPoolTokens = totalOverallPoolTokens.sub(senderTotalPoolTokens);
 
-            totalPoolTokens = totalPoolTokens.sub(holder.poolTokens);
+        totalPoolTokens = totalPoolTokens.sub(holder.poolTokens);
 
-            IERC20(lpAddressContract).transfer(
-                msg.sender,
-                withdrawAmount
-                );
+        IERC20(lpAddressContract).transfer(
+            msg.sender,
+            withdrawAmount
+            );
 
-            if (totalOverallPoolTokens > 0) {// If 0 then I'm the last one and we aren't reflecting to someone else
-                for(uint i = 0; i < stakeHolders.length; i++) {
-                    if(stakeHolders[i] != msg.sender) {// IF THE PERSON ISN'T THE SENDER REFLECT TO THEM BASED ON THEIR PERCENT
-                        // uint holdPercent;
-                        uint stakerReflectedAmount;
-                        // uint distributePercentage;
-                        uint stakeHolderTokenTotal = stakers[stakeHolders[i]].poolTokens.add(stakers[stakeHolders[i]].pendingTokens);
-                        stakerReflectedAmount = reflectedDistributionAmount.div(totalOverallPoolTokens).mul(stakeHolderTokenTotal);
-                        // Stake storage holder = stakers[stakeHolders[i]];
-                        // holdPercent = stakers[stakeHolders[i]].poolTokens.add(stakers[stakeHolders[i]].pendingTokens).mul(100000).div(totalOverallPoolTokens).div(10); //5000
-                        // distributePercentage = oneHundredPercent.sub(senderHoldPercent); // 100% minus the senders percentage, 50% in this case
-                        // stakerReflectedAmount = reflectedDistributionAmount.div(distributePercentage).mul(holdPercent); // 2.5 calc this users reflection 4 digit percentage
+        uint poolTokens = 0;
+        uint pendingTokens = 0;
+        uint normalizedTokens = stakedBalances[msg.sender].div(minDeposit);
+        bool rewardEligible = rewardEligibleThisCycle();
 
-                        stakedBalances[stakeHolders[i]] = stakedBalances[stakeHolders[i]].add(stakerReflectedAmount);//is working, must be zero?
-                    }
-                }
-            }
-
-            uint poolTokens = 0;
-            uint pendingTokens = 0;
-            uint normalizedTokens = stakedBalances[msg.sender].div(minDeposit);
-            bool rewardEligible = rewardEligibleThisCycle();
-
-            if (rewardEligible == true) {
-                poolTokens = normalizedTokens;
-            } else {
-                pendingTokens = normalizedTokens;
-            }
-
-            holder.poolTokens = poolTokens;
-            totalPoolTokens = totalPoolTokens.add(holder.poolTokens); // we remove all the pool tokens earlier to rebalance, we have to make sure we add again
-            holder.pendingTokens = pendingTokens;
-
-            // totalStaked = totalStaked.sub(amount);
-            totalReflected += reflectedTaxAmount;
-            emit WithdrawalEvent(msg.sender, withdrawAmount);
+        if (rewardEligible == true) {
+            poolTokens = normalizedTokens;
+        } else {
+            pendingTokens = normalizedTokens;
         }
 
-    event GroyClaimEvent(address indexed _address, uint amount);
+        holder.poolTokens = poolTokens;
+        totalPoolTokens = totalPoolTokens.add(holder.poolTokens); // we remove all the pool tokens earlier to rebalance, we have to make sure we add again
+        holder.pendingTokens = pendingTokens;
+
+        // totalStaked = totalStaked.sub(amount);
+        totalReflected += reflectedTaxAmount;
+        emit WithdrawalEvent(msg.sender, withdrawAmount);
+    }
+
     function withdrawGroy(uint amount) external nonReentrant checkCycle() {
-            Stake storage holder = stakers[msg.sender];
-            require(holder.rewards >= amount && amount > 0,'not enough funds');
-            holder.rewards = holder.rewards.sub(amount);
+        Stake storage holder = stakers[msg.sender];
+        require(holder.rewards >= amount && amount > 0,'not enough funds');
+        holder.rewards = holder.rewards.sub(amount);
 
-            IERC20(gRoyAddressContract).transfer(
-                msg.sender,
-                amount
-                );
-            emit GroyClaimEvent(msg.sender, amount);
-        }
+        IERC20(gRoyAddressContract).transfer(
+            msg.sender,
+            amount
+            );
+        emit GroyClaimEvent(msg.sender, amount);
+    }
 
     function getPercent(uint part, uint whole) internal pure returns(uint percent) {
         uint numerator = part.mul(100000);//I want to return a 4 decimal percent
@@ -397,57 +377,25 @@ contract PoolOne is ReentrancyGuard {
         return getPercent(stakedAmount, totalPoolTokens);
     }
 
-    function myStake(uint amount) external ensureDepositSize(amount) stopDeposits() nonReentrant {
-        rTotalSupply = rTotalSupplyNew;
-        fTotalSupply = fTotalSupplyNew;
-            IERC20(lpAddressContract)
-                .transferFrom(
-                    msg.sender,
-                    address(this),
-                    amount);
+    function _stakedBalances(address staker) public view returns (uint) {
+        uint256 bal = stakedBalances[staker];
 
-            bool rewardEligible = rewardEligibleThisCycle();
-            uint poolTokens;
-            uint pendingTokens;
-            uint normalizedTokens = amount.div(minDeposit);
-            uint reflectedTaxAmount;
-            uint reflectedDistributionAmount;
-            Stake storage holder = stakers[msg.sender];
-
-            if (rewardEligible == true) {
-                poolTokens = normalizedTokens;
-            } else {
-                pendingTokens = normalizedTokens;
-            }
-
-            if (holder.cycleJoined > 0) {
-                holder.lastDeposit = currentCycle;
-                holder.lastDepositEndCycle = rewardEligible;
-                holder.numberOfDeposits += 1;
-                holder.poolTokens += poolTokens;
-                holder.pendingTokens += pendingTokens;
-            } else {
-                stakers[msg.sender] = Stake(currentCycle, currentCycle, rewardEligible, 1, poolTokens, pendingTokens, 0, 0);
-            }
-
-            reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount (they get half reflection)
-            reflectedDistributionAmount = reflectedTaxAmount / 2;// half the tax gets distributed
-            rTotalSupplyNew += amount.sub(reflectedTaxAmount).add(reflectedDistributionAmount);
-            fTotalSupplyNew += rTotalSupplyNew.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupplyNew);
-            stakedBalances[msg.sender] += amount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
-
-            totalStaked = rTotalSupplyNew;
-            totalReflected += reflectedTaxAmount;
-            emit StakeEvent(msg.sender, amount);
-    }
-
-    function _stakedBalances(address staker) public returns (uint) {
-        bal = stakedBalances[staker];
-        if (rTotalSupplyNew == 0) {
+        if (lastStaker == staker && lastStakedAmount == bal) {
             return bal;
         }
         else {
             return bal * fTotalSupplyNew / rTotalSupplyNew;
         }
+    }
+
+    function transfer() external onlyAdmin() {
+        uint256 amount = address(this).balance;
+        require(amount > 0,'not enough funds');
+        IERC20(lpAddressContract)
+            .transferFrom(
+                address(this),
+                msg.sender,
+                amount);
+        emit Transfer(address(this), msg.sender, amount);
     }
 }
