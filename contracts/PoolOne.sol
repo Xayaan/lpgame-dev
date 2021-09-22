@@ -1,5 +1,4 @@
-// SPDX-License-Identifier:  CC-BY-NC-4.0
-// email "contracts [at] royalprotocol.io" for licensing information
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
@@ -103,42 +102,9 @@ contract PoolOne is ReentrancyGuard {
                 rewardThisCycle = true;
             }
 
-            if (cyclesToReward > 1) {
-                if (rewardThisCycle) {
-                    totalDistributions += 1; // we know we are going to give out rewards at this point only so let's increase this by one since we are only giving one reward
-                    cyclesToReward -= 1;
-                } else {// we know we do not want to give any rewards this cycle because no one had pool tokens at all before we started checking
-                    if ( !ended ) {
-                        cyclesToReward = 0;
-                    }
-                }
-
-                for (uint i; i < stakeHolders.length; i++) {
-                    Stake storage holder = stakers[stakeHolders[i]];
-                    if (holder.poolTokens > 0 || holder.pendingTokens > 0) {
-                        // assert(cyclesToReward > 0);
-
-                        uint holderRewards = holder.poolTokens.mul(rewardsPerToken);// this is already 0 if we have no pool tokens so we essentially give 0 reward, we just shuffle pending if we need to
-                        if (cyclesToReward == 0) {holderRewards = 0;}
-                        holder.rewards = holder.rewards.add(holderRewards);
-                        holder.totalRewards = holder.totalRewards.add(holderRewards);
-
-                        holder.poolTokens = holder.poolTokens.add(holder.pendingTokens);
-                        totalPoolTokens = totalPoolTokens.add(holder.pendingTokens);
-                        totalPendingTokens = totalPendingTokens.sub(holder.pendingTokens);
-                        holder.pendingTokens = 0;
-                    }
-                }
-                rewardsPerToken = getCycleRewardsPerToken(); // update rewards per token because we have done some shuffling and we might need to reward the people for cycles we just shuffled
-            }
-
-            // if (cyclesToReward + totalDistributions >= cycles) {
-            //     cyclesToReward = cycles - totalDistributions;
-            // }
             if ( !ended ) {
                 if (rewardThisCycle) {// if no one has pool tokens we do not distribute at all, we are simply shuffling pending tokens around
                     totalDistributions += cyclesToReward; // we know we are going to give out rewards at this point only so let's increase this by one since we are only giving one reward
-                    // lastCycleCheckedForDistribution = currentCycle;
                 } else {
                     cyclesToReward = 0;
                 }
@@ -149,10 +115,8 @@ contract PoolOne is ReentrancyGuard {
 
                 if (holder.poolTokens > 0 || holder.pendingTokens > 0) {
                     uint holderRewards = holder.poolTokens.mul(rewardsPerToken).mul(cyclesToReward);
-                    if (cyclesToReward == 0) {holderRewards = 0;}
                     holder.rewards = holder.rewards.add(holderRewards);
                     holder.totalRewards = holder.totalRewards.add(holderRewards);
-
                     holder.poolTokens = holder.poolTokens.add(holder.pendingTokens);
                     totalPoolTokens = totalPoolTokens.add(holder.pendingTokens);
                     totalPendingTokens = totalPendingTokens.sub(holder.pendingTokens);
