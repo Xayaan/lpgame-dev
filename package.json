@@ -6,7 +6,8 @@
     "test-gas": "truffle test ./test/gasTest.js",
     "test-poolOne": "truffle test ./test/poolOne.js",
     "compile-testnet": "truffle compile --network bscTestnet",
-    "deploy-testnet": "truffle migrate --network bscTestnet"
+    "deploy-testnet": "truffle migrate --network bscTestnet",
+    "verify-testnet": "truffle run verify PoolOne --network bscTestnet"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.1",

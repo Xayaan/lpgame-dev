@@ -27,6 +27,8 @@ contract PoolOne is ReentrancyGuard {
     uint public fTotalSupply;
     uint public rTotalSupplyNew;
     uint public fTotalSupplyNew;
+    uint public rTotalSupplyPrev;
+    uint public fTotalSupplyPrev;
     // struct FakeBlock {
     //     uint timestamp;
     // }
@@ -233,11 +235,20 @@ contract PoolOne is ReentrancyGuard {
         uint256 newStakedAmount = amount.sub(reflectedTaxAmount);
         rTotalSupplyNew += newStakedAmount;
         // fTotalSupplyNew += rTotalSupplyNew.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupplyNew);
-        if (rTotalSupply > 0 && fTotalSupply > 0
-            && !(lastStaker == msg.sender && lastStakedAmount == stakedBalances[msg.sender]))
-        {
-            fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
-            stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
+        if (rTotalSupply > 0 && fTotalSupply > 0) {
+            if (stakedBalances[msg.sender] > 0) {
+                fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
+                if (rTotalSupplyPrev > 0) {
+                    stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
+                } else {
+                    stakedBalances[msg.sender] += newStakedAmount;
+                }
+            } else {
+                fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
+                stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
+                rTotalSupplyPrev = rTotalSupply;
+                fTotalSupplyPrev = fTotalSupply;
+            }
         } else {
             fTotalSupplyNew += rTotalSupplyNew;
             stakedBalances[msg.sender] += newStakedAmount;
@@ -344,11 +355,10 @@ contract PoolOne is ReentrancyGuard {
     function _stakedBalances(address staker) public view returns (uint) {
         uint256 bal = stakedBalances[staker];
 
-        if (lastStaker == staker && lastStakedAmount == bal) {
-            return bal;
-        }
-        else {
+        if (fTotalSupplyNew > 0 && fTotalSupplyPrev > 0) {
             return bal * fTotalSupplyNew / rTotalSupplyNew;
+        } else {
+            return bal;
         }
     }
 

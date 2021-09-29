@@ -752,7 +752,7 @@ contract('PoolOne', (accounts) => {
         assert(traderPoolTokens["rewards"].toString() === web3.utils.toWei('625'), traderPoolTokens["rewards"].toString());
         assert(traderPoolTokens["totalRewards"].toString() === web3.utils.toWei('625'));
 
-        assert(checkBalance(stakedBalance, web3.utils.toWei('2.875')) === true, "staked balance was wrong");
+        assert(checkBalance(stakedBalance, web3.utils.toWei('2.875')) === true, "staked balance was wrong"+ stakedBalance.toString());
         assert(stakeholder1.toString() === trader1);
         assert(percentageOfPool.toString() === "7500", percentageOfPool.toString());
 
@@ -819,7 +819,7 @@ contract('PoolOne', (accounts) => {
         assert(traderPoolTokens["pendingTokens"].toString() === "0");
         assert(traderPoolTokens["rewards"].toString() === web3.utils.toWei('1562.5'));
         assert(traderPoolTokens["totalRewards"].toString() === web3.utils.toWei('1562.5'));
-        assert(checkBalance(stakedBalance, web3.utils.toWei('2.899')) === true, "staked balance was wrong");
+        assert(checkBalance(stakedBalance, web3.utils.toWei('2.899')) === true, "staked balance was wrong"+stakedBalance.toString());
         assert(stakeholder1.toString() === trader1);
         assert(percentageOfPool.toString() === "6000", percentageOfPool.toString());
 
@@ -835,7 +835,7 @@ contract('PoolOne', (accounts) => {
         assert(traderPoolTokens2["rewards"].toString() === web3.utils.toWei('937.5'));
         assert(traderPoolTokens2["totalRewards"].toString() === web3.utils.toWei('937.5'));
 
-        assert(checkBalance(stakedBalance2, web3.utils.toWei('1.95')) === true, "staked balance 2 was wrong");
+        assert(checkBalance(stakedBalance2, web3.utils.toWei('1.95')) === true, "staked balance 2 was wrong" + stakedBalance2.toString());
         assert(stakeholder2.toString() === trader2);
         assert(percentageOfPool2.toString() === "4000", percentageOfPool2.toString());
     });
@@ -912,7 +912,7 @@ contract('PoolOne', (accounts) => {
         assert(traderPoolTokens12["rewards"].toString() === web3.utils.toWei('625'), traderPoolTokens12["rewards"].toString());
         assert(traderPoolTokens12["totalRewards"].toString() === web3.utils.toWei('625'));
 
-        assert(checkBalance(stakedBalance12, web3.utils.toWei('2.875')) === true, "staked balance 12 was wrong");
+        assert(checkBalance(stakedBalance12, web3.utils.toWei('2.875')) === true, "staked balance 12 was wrong"+stakedBalance12.toString());
         assert(stakeholder12.toString() === trader1);
         assert(percentageOfPool12.toString() === "7500", percentageOfPool12.toString());
 
@@ -958,7 +958,7 @@ contract('PoolOne', (accounts) => {
         assert(traderPoolTokens13["rewards"].toString() === web3.utils.toWei('1562.5'), traderPoolTokens13["rewards"].toString());
         assert(traderPoolTokens13["totalRewards"].toString() === web3.utils.toWei('1562.5'));
 
-        assert(checkBalance(stakedBalance13, web3.utils.toWei('2.8999')) === true, "staked balance 13 was wrong");
+        assert(checkBalance(stakedBalance13, web3.utils.toWei('2.8999')) === true, "staked balance 13 was wrong"+stakedBalance13.toString());
         assert(stakeholder13.toString() === trader1);
         assert(percentageOfPool13.toString() === "6000", percentageOfPool13.toString());
 
