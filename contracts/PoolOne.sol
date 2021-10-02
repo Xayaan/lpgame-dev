@@ -39,7 +39,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
     // uint public now;
 
     // address public admin;
-    uint public totalStaked;
+    // uint public totalStaked;
     uint public totalReflected;
     uint public totalPoolTokens; //might be redundant because we have totalStaked but this way we should remain rounder?
     uint public totalPendingTokens;
@@ -237,15 +237,15 @@ contract PoolOne is ReentrancyGuard, Ownable {
         rTotalSupplyNew += newStakedAmount;
         // fTotalSupplyNew += rTotalSupplyNew.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupplyNew);
         if (rTotalSupply > 0 && fTotalSupply > 0) {
-            if (stakedBalances[msg.sender] > 0) {
                 fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
+            if (stakedBalances[msg.sender] > 0) {
                 if (rTotalSupplyPrev > 0) {
                     stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
                 } else {
                     stakedBalances[msg.sender] += newStakedAmount;
                 }
             } else {
-                fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
+                // fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
                 stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
                 rTotalSupplyPrev = rTotalSupply;
                 fTotalSupplyPrev = fTotalSupply;
@@ -277,7 +277,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
             lastStakedAmount += newStakedAmount;
         }
 
-        totalStaked += amount;
+        // totalStaked += amount;
         totalReflected += reflectedTaxAmount;
         emit StakeEvent(msg.sender, amount);
     }
