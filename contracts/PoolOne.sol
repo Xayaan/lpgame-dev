@@ -9,14 +9,14 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 contract PoolOne is ReentrancyGuard, Ownable {
     using SafeMath for uint;
     struct Stake {
-        uint cycleJoined;
-        uint lastDeposit;
-        bool lastDepositEndCycle;
-        uint numberOfDeposits;
-        uint poolTokens;
-        uint pendingTokens;
-        uint rewards;
-        uint totalRewards;
+        uint cycleJoined; // number of cycles
+        uint lastDeposit; // number of cycles
+        bool lastDepositEndCycle; // boolean value to check if reward is possible or not
+        uint numberOfDeposits; //number of deposits for a holder
+        uint poolTokens; // tokens for reward eligible status
+        uint pendingTokens; // tokens for reward ineligible status
+        uint rewards; // rewards for current cycle
+        uint totalRewards; //total rewards for a holder
     }
 
     address public lpAddressContract;
@@ -78,7 +78,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
     }
 
     modifier checkCycle() {
-        currentCycle = block.timestamp.sub(start).div(cycleLength).add(1);
+        currentCycle = block.timestamp.sub(start).div(cycleLength).add(1); // current staking number
         if (currentCycle > lastCycleCheckedForDistribution && totalDistributions < cycles) {
             if (lastCycleCheckedForDistribution == 0) {//skip rewards in cycle 1
                 lastCycleCheckedForDistribution = 1;
@@ -199,43 +199,48 @@ contract PoolOne is ReentrancyGuard, Ownable {
         rTotalSupply = rTotalSupplyNew;
         fTotalSupply = fTotalSupplyNew;
 
+        // Transfer the given amount of tokens to this liquidity pool.
         IERC20(lpAddressContract)
             .transferFrom(
                 msg.sender,
                 address(this),
                 amount);
 
-        bool rewardEligible = rewardEligibleThisCycle();
-        uint poolTokens;
-        uint pendingTokens;
-        uint normalizedTokens = amount.div(minDeposit);
-        uint reflectedTaxAmount;
-        uint reflectedDistributionAmount;
+        bool rewardEligible = rewardEligibleThisCycle(); // boolean value to check if reward is eligible or not
+        uint poolTokens; // tokens for reward eligible stauts of a curren staker
+        uint pendingTokens; // tokens for reward ineligible stauts of a curren staker
+        uint normalizedTokens = amount.div(minDeposit); // nomalized token by minimum deposit amount
+        uint reflectedTaxAmount; // the amount of token for deposit fee
+        uint reflectedDistributionAmount; // the amount of token that can be distributed to top holders
         Stake storage holder = stakers[msg.sender];
 
+        // check if reward is eligible or not, and set poolTokens and pendingTokens according to the reward eligibility
         if (rewardEligible == true) {
             poolTokens = normalizedTokens;
         } else {
             pendingTokens = normalizedTokens;
         }
 
+        // in case that the cycle is not the first time for a holder
         if (holder.cycleJoined > 0) {
             holder.lastDeposit = currentCycle;
             holder.lastDepositEndCycle = rewardEligible;
             holder.numberOfDeposits += 1;
             holder.poolTokens += poolTokens;
             holder.pendingTokens += pendingTokens;
-        } else {
+        } else { // in case that the cycle is the first time for a holder
             stakers[msg.sender] = Stake(currentCycle, currentCycle, rewardEligible, 1, poolTokens, pendingTokens, 0, 0);
         }
 
-        totalPoolTokens += poolTokens;
-        totalPendingTokens += pendingTokens;
-        reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount (they get half reflection)
+        totalPoolTokens += poolTokens; // total amount of reward eligible tokens for a holder
+        totalPendingTokens += pendingTokens; // total amount of reward ineligible tokens for a holder
+        reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount according to depositFee value
         reflectedDistributionAmount = reflectedTaxAmount / 2;// half the tax gets distributed
-        uint256 newStakedAmount = amount.sub(reflectedTaxAmount);
+        uint256 newStakedAmount = amount.sub(reflectedTaxAmount); // the amount of staked token newly by a current holder excluding reflected tax amount
         rTotalSupplyNew += newStakedAmount;
         // fTotalSupplyNew += rTotalSupplyNew.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupplyNew);
+
+        // in case of the first stake in this contract
         if (rTotalSupply > 0 && fTotalSupply > 0) {
                 fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
             if (stakedBalances[msg.sender] > 0) {
