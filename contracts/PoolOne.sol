@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
-contract PoolOne is ReentrancyGuard {
+contract PoolOne is ReentrancyGuard, Ownable {
     using SafeMath for uint;
     struct Stake {
         uint cycleJoined;
@@ -37,7 +38,7 @@ contract PoolOne is ReentrancyGuard {
 
     // uint public now;
 
-    address public admin;
+    // address public admin;
     uint public totalStaked;
     uint public totalReflected;
     uint public totalPoolTokens; //might be redundant because we have totalStaked but this way we should remain rounder?
@@ -66,10 +67,10 @@ contract PoolOne is ReentrancyGuard {
     event WithdrawalEvent(address indexed _address, uint amount);
     event GroyClaimEvent(address indexed _address, uint amount);
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "admin!");
-        _;
-    }
+    // modifier onlyAdmin() {
+    //     require(msg.sender == admin, "admin!");
+    //     _;
+    // }
 
     modifier ensureDepositSize(uint amount) {
         require(amount >= minDeposit, "stake amount not large enough");
@@ -147,7 +148,7 @@ contract PoolOne is ReentrancyGuard {
         uint _cycles,
         uint _length
     ) {
-        admin = msg.sender;
+        // admin = msg.sender;
         lpAddressContract = _tokenAddress;
         gRoyAddressContract = _gRoyAddress;
         poolTokenRewards = _rewards * 10 ** 18;
@@ -181,15 +182,15 @@ contract PoolOne is ReentrancyGuard {
         return contractDuration.sub(contractCycles.mul(cycleLength)) < cycleLength.div(2); // ensure they're in the first half of this cycle
     }
 
-    function updateLPToken(address _tokenAddress) public onlyAdmin() {
+    function updateLPToken(address _tokenAddress) public onlyOwner {
         lpAddressContract = _tokenAddress;
     }
 
-    function updateGroyToken(address _tokenAddress) public onlyAdmin() {
+    function updateGroyToken(address _tokenAddress) public onlyOwner {
         gRoyAddressContract = _tokenAddress;
     }
 
-    function updateWithdrawFee(uint _newFee) public onlyAdmin() {
+    function updateWithdrawFee(uint _newFee) public onlyOwner {
         require(_newFee <= 5, "more smol please");
         withdrawFee = _newFee;
     }
@@ -362,7 +363,7 @@ contract PoolOne is ReentrancyGuard {
         }
     }
 
-    function transfer() external onlyAdmin() {
+    function transfer() external onlyOwner {
         uint256 amount = address(this).balance;
         require(amount > 0,'not enough funds');
         IERC20(lpAddressContract)
