@@ -162,9 +162,9 @@ contract PoolOne is ReentrancyGuard, Ownable {
     //     block.timestamp = val;
     // }
 
-    function checkTheShit() external checkCycle() {
-        //TODO: DELETE ME FOR PROD
-    }
+    // function checkTheShit() external checkCycle() {
+    //     //TODO: DELETE ME FOR PROD
+    // }
 
     function getCycleRewardsPerToken() public view returns(uint) {
         if (totalPoolTokens == 0) {
@@ -346,8 +346,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
 
     function getPercent(uint part, uint whole) internal pure returns(uint percent) {
         uint numerator = part.mul(100000);//I want to return a 4 decimal percent
-        uint temp = numerator.div(whole).add(5);
-        return temp.div(10);
+        return (numerator.div(whole).add(5)).div(10);
     }
 
     function percentageOfPool(address wallet) view public returns(uint) {
