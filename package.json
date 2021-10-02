@@ -4,12 +4,17 @@
     "clean": "rimraf ./build",
     "test": "truffle test",
     "test-gas": "truffle test ./test/gasTest.js",
-    "test-poolOne": "truffle test ./test/poolOne.js"
+    "test-poolOne": "truffle test ./test/poolOne.js",
+    "compile-testnet": "truffle compile --network bscTestnet",
+    "deploy-testnet": "truffle migrate --network bscTestnet",
+    "verify-testnet": "truffle run verify PoolOne --network bscTestnet"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.1",
     "@openzeppelin/test-environment": "^0.1.5",
     "@openzeppelin/test-helpers": "^0.5.6",
-    "jest": "^26.4.2"
+    "@truffle/hdwallet-provider": "^1.5.0",
+    "jest": "^26.4.2",
+    "truffle-plugin-verify": "^0.5.15"
   }
 }
