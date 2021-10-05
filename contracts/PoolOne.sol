@@ -242,7 +242,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
 
         // in case of the first stake in this contract
         if (rTotalSupply > 0 && fTotalSupply > 0) {
-                fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
+            fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
             if (stakedBalances[msg.sender] > 0) {
                 if (rTotalSupplyPrev > 0) {
                     stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
