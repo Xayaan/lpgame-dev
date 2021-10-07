@@ -23,7 +23,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
     address public lpAddressContract;
     address public gRoyAddressContract;
     mapping(address => Stake) public stakers;
-    mapping(address =>  uint) public stakedBalances;
+    mapping(address =>  uint) private stakedBalances;
 
     uint private rTotalSupply;
     uint private fTotalSupply;
@@ -53,16 +53,14 @@ contract PoolOne is ReentrancyGuard, Ownable {
     uint public lastCycleCheckedForDistribution;
     uint public cycleLength; // 3600 for prod
     uint public end; //TODO: Handle End of contract
-    uint public depositFee = 5;
+    uint private depositFee = 5;
     uint public withdrawFee = 5;
-    uint private oneHundredPercent = 10000;
+    // uint private oneHundredPercent = 10000;
 
     uint public constant minDeposit = 1000000000000000; //1000000 gwei
     address[] public stakeHolders;
-    uint public maxTopStakerCount = 20;
+    uint private maxTopStakerCount = 20;
     address[] public topStakers;
-    mapping(address => bool) public stakerStatus;
-    mapping(address => uint) public stakerOrder;
     uint public totalStakerCount;
 
     uint256 public lastStakedAmount;
@@ -239,6 +237,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
             holder.poolTokens += poolTokens;
             holder.pendingTokens += pendingTokens;
 
+            // this need to get correct stakedBalance of last staker, but not use yet
             if (stakeHolders[totalStakerCount - 1] == msg.sender) {
                 lastStakedAmount += newStakedAmount;
             }
