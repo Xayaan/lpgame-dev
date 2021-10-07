@@ -1,6 +1,6 @@
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const fs = require('fs');
-// const { mnemonic, BSCSCANAPIKEY} = require('./env.json');
+const { mnemonic, BSCSCANAPIKEY} = require('./env.json');
 
 module.exports = {
   // deploy

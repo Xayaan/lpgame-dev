@@ -4,18 +4,19 @@ pragma solidity ^0.8.0;
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
-contract PoolOne is ReentrancyGuard {
+contract PoolOne is ReentrancyGuard, Ownable {
     using SafeMath for uint;
     struct Stake {
-        uint cycleJoined;
-        uint lastDeposit;
-        bool lastDepositEndCycle;
-        uint numberOfDeposits;
-        uint poolTokens;
-        uint pendingTokens;
-        uint rewards;
-        uint totalRewards;
+        uint cycleJoined; // number of cycles
+        uint lastDeposit; // number of cycles
+        bool lastDepositEndCycle; // boolean value to check if reward is possible or not
+        uint numberOfDeposits; //number of deposits for a holder
+        uint poolTokens; // tokens for reward eligible status
+        uint pendingTokens; // tokens for reward ineligible status
+        uint rewards; // rewards for current cycle
+        uint totalRewards; //total rewards for a holder
     }
 
     address public lpAddressContract;
@@ -37,8 +38,8 @@ contract PoolOne is ReentrancyGuard {
 
     // uint public now;
 
-    address public admin;
-    uint public totalStaked;
+    // address public admin;
+    // uint public totalStaked;
     uint public totalReflected;
     uint public totalPoolTokens; //might be redundant because we have totalStaked but this way we should remain rounder?
     uint public totalPendingTokens;
@@ -66,10 +67,10 @@ contract PoolOne is ReentrancyGuard {
     event WithdrawalEvent(address indexed _address, uint amount);
     event GroyClaimEvent(address indexed _address, uint amount);
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "admin!");
-        _;
-    }
+    // modifier onlyAdmin() {
+    //     require(msg.sender == admin, "admin!");
+    //     _;
+    // }
 
     modifier ensureDepositSize(uint amount) {
         require(amount >= minDeposit, "stake amount not large enough");
@@ -77,7 +78,7 @@ contract PoolOne is ReentrancyGuard {
     }
 
     modifier checkCycle() {
-        currentCycle = block.timestamp.sub(start).div(cycleLength).add(1);
+        currentCycle = block.timestamp.sub(start).div(cycleLength).add(1); // current staking number
         if (currentCycle > lastCycleCheckedForDistribution && totalDistributions < cycles) {
             if (lastCycleCheckedForDistribution == 0) {//skip rewards in cycle 1
                 lastCycleCheckedForDistribution = 1;
@@ -147,7 +148,7 @@ contract PoolOne is ReentrancyGuard {
         uint _cycles,
         uint _length
     ) {
-        admin = msg.sender;
+        // admin = msg.sender;
         lpAddressContract = _tokenAddress;
         gRoyAddressContract = _gRoyAddress;
         poolTokenRewards = _rewards * 10 ** 18;
@@ -161,9 +162,9 @@ contract PoolOne is ReentrancyGuard {
     //     block.timestamp = val;
     // }
 
-    function checkTheShit() external checkCycle() {
-        //TODO: DELETE ME FOR PROD
-    }
+    // function checkTheShit() external checkCycle() {
+    //     //TODO: DELETE ME FOR PROD
+    // }
 
     function getCycleRewardsPerToken() public view returns(uint) {
         if (totalPoolTokens == 0) {
@@ -181,15 +182,15 @@ contract PoolOne is ReentrancyGuard {
         return contractDuration.sub(contractCycles.mul(cycleLength)) < cycleLength.div(2); // ensure they're in the first half of this cycle
     }
 
-    function updateLPToken(address _tokenAddress) public onlyAdmin() {
+    function updateLPToken(address _tokenAddress) public onlyOwner {
         lpAddressContract = _tokenAddress;
     }
 
-    function updateGroyToken(address _tokenAddress) public onlyAdmin() {
+    function updateGroyToken(address _tokenAddress) public onlyOwner {
         gRoyAddressContract = _tokenAddress;
     }
 
-    function updateWithdrawFee(uint _newFee) public onlyAdmin() {
+    function updateWithdrawFee(uint _newFee) public onlyOwner {
         require(_newFee <= 5, "more smol please");
         withdrawFee = _newFee;
     }
@@ -198,53 +199,58 @@ contract PoolOne is ReentrancyGuard {
         rTotalSupply = rTotalSupplyNew;
         fTotalSupply = fTotalSupplyNew;
 
+        // Transfer the given amount of tokens to this liquidity pool.
         IERC20(lpAddressContract)
             .transferFrom(
                 msg.sender,
                 address(this),
                 amount);
 
-        bool rewardEligible = rewardEligibleThisCycle();
-        uint poolTokens;
-        uint pendingTokens;
-        uint normalizedTokens = amount.div(minDeposit);
-        uint reflectedTaxAmount;
-        uint reflectedDistributionAmount;
+        bool rewardEligible = rewardEligibleThisCycle(); // boolean value to check if reward is eligible or not
+        uint poolTokens; // tokens for reward eligible stauts of a curren staker
+        uint pendingTokens; // tokens for reward ineligible stauts of a curren staker
+        uint normalizedTokens = amount.div(minDeposit); // nomalized token by minimum deposit amount
+        uint reflectedTaxAmount; // the amount of token for deposit fee
+        uint reflectedDistributionAmount; // the amount of token that can be distributed to top holders
         Stake storage holder = stakers[msg.sender];
 
+        // check if reward is eligible or not, and set poolTokens and pendingTokens according to the reward eligibility
         if (rewardEligible == true) {
             poolTokens = normalizedTokens;
         } else {
             pendingTokens = normalizedTokens;
         }
 
+        // in case that the cycle is not the first time for a holder
         if (holder.cycleJoined > 0) {
             holder.lastDeposit = currentCycle;
             holder.lastDepositEndCycle = rewardEligible;
             holder.numberOfDeposits += 1;
             holder.poolTokens += poolTokens;
             holder.pendingTokens += pendingTokens;
-        } else {
+        } else { // in case that the cycle is the first time for a holder
             stakers[msg.sender] = Stake(currentCycle, currentCycle, rewardEligible, 1, poolTokens, pendingTokens, 0, 0);
         }
 
-        totalPoolTokens += poolTokens;
-        totalPendingTokens += pendingTokens;
-        reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount (they get half reflection)
+        totalPoolTokens += poolTokens; // total amount of reward eligible tokens for a holder
+        totalPendingTokens += pendingTokens; // total amount of reward ineligible tokens for a holder
+        reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount according to depositFee value
         reflectedDistributionAmount = reflectedTaxAmount / 2;// half the tax gets distributed
-        uint256 newStakedAmount = amount.sub(reflectedTaxAmount);
+        uint256 newStakedAmount = amount.sub(reflectedTaxAmount); // the amount of staked token newly by a current holder excluding reflected tax amount
         rTotalSupplyNew += newStakedAmount;
         // fTotalSupplyNew += rTotalSupplyNew.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupplyNew);
+
+        // in case of the first stake in this contract
         if (rTotalSupply > 0 && fTotalSupply > 0) {
+            fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
             if (stakedBalances[msg.sender] > 0) {
-                fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
                 if (rTotalSupplyPrev > 0) {
                     stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
                 } else {
                     stakedBalances[msg.sender] += newStakedAmount;
                 }
             } else {
-                fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
+                // fTotalSupplyNew = fTotalSupply.mul(rTotalSupplyNew.add(reflectedTaxAmount)).div(rTotalSupply);
                 stakedBalances[msg.sender] += newStakedAmount.mul(rTotalSupplyNew).div(fTotalSupplyNew);
                 rTotalSupplyPrev = rTotalSupply;
                 fTotalSupplyPrev = fTotalSupply;
@@ -276,7 +282,7 @@ contract PoolOne is ReentrancyGuard {
             lastStakedAmount += newStakedAmount;
         }
 
-        totalStaked += amount;
+        // totalStaked += amount;
         totalReflected += reflectedTaxAmount;
         emit StakeEvent(msg.sender, amount);
     }
@@ -340,8 +346,7 @@ contract PoolOne is ReentrancyGuard {
 
     function getPercent(uint part, uint whole) internal pure returns(uint percent) {
         uint numerator = part.mul(100000);//I want to return a 4 decimal percent
-        uint temp = numerator.div(whole).add(5);
-        return temp.div(10);
+        return (numerator.div(whole).add(5)).div(10);
     }
 
     function percentageOfPool(address wallet) view public returns(uint) {
@@ -362,7 +367,7 @@ contract PoolOne is ReentrancyGuard {
         }
     }
 
-    function transfer() external onlyAdmin() {
+    function transfer() external onlyOwner {
         uint256 amount = address(this).balance;
         require(amount > 0,'not enough funds');
         IERC20(lpAddressContract)
