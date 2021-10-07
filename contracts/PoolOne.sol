@@ -17,6 +17,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
         uint pendingTokens; // tokens for reward ineligible status
         uint rewards; // rewards for current cycle
         uint totalRewards; //total rewards for a holder
+        uint order; // stake order
     }
 
     address public lpAddressContract;
@@ -24,12 +25,12 @@ contract PoolOne is ReentrancyGuard, Ownable {
     mapping(address => Stake) public stakers;
     mapping(address =>  uint) public stakedBalances;
 
-    uint public rTotalSupply;
-    uint public fTotalSupply;
-    uint public rTotalSupplyNew;
-    uint public fTotalSupplyNew;
-    uint public rTotalSupplyPrev;
-    uint public fTotalSupplyPrev;
+    uint private rTotalSupply;
+    uint private fTotalSupply;
+    uint private rTotalSupplyNew;
+    uint private fTotalSupplyNew;
+    uint private rTotalSupplyPrev;
+    uint private fTotalSupplyPrev;
     // struct FakeBlock {
     //     uint timestamp;
     // }
@@ -57,9 +58,13 @@ contract PoolOne is ReentrancyGuard, Ownable {
     uint private oneHundredPercent = 10000;
 
     uint public constant minDeposit = 1000000000000000; //1000000 gwei
-    uint public maxTopStakerCount = 20;
     address[] public stakeHolders;
-    address public lastStaker;
+    uint public maxTopStakerCount = 20;
+    address[] public topStakers;
+    mapping(address => bool) public stakerStatus;
+    mapping(address => uint) public stakerOrder;
+    uint public totalStakerCount;
+
     uint256 public lastStakedAmount;
 
     event Transfer(address indexed from, address indexed to, uint256 tokens);
@@ -173,7 +178,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
         return poolTokenRewards.div(cycles).div(totalPoolTokens);
     }
 
-    function rewardEligibleThisCycle() view public returns(bool) {
+    function rewardEligibleThisCycle() public view returns(bool) {
         uint contractDuration = block.timestamp.sub(start); //cycleLength.mul(currentCycle).add(start);
         if (contractDuration < cycleLength) {
             return contractDuration < cycleLength.div(2); // fix for first cycle
@@ -221,22 +226,44 @@ contract PoolOne is ReentrancyGuard, Ownable {
             pendingTokens = normalizedTokens;
         }
 
-        // in case that the cycle is not the first time for a holder
+        totalPoolTokens += poolTokens;
+        totalPendingTokens += pendingTokens;
+        reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount (they get half reflection)
+        reflectedDistributionAmount = reflectedTaxAmount / 2;// half the tax gets distributed
+        uint256 newStakedAmount = amount.sub(reflectedTaxAmount);
+
         if (holder.cycleJoined > 0) {
             holder.lastDeposit = currentCycle;
             holder.lastDepositEndCycle = rewardEligible;
             holder.numberOfDeposits += 1;
             holder.poolTokens += poolTokens;
             holder.pendingTokens += pendingTokens;
-        } else { // in case that the cycle is the first time for a holder
-            stakers[msg.sender] = Stake(currentCycle, currentCycle, rewardEligible, 1, poolTokens, pendingTokens, 0, 0);
+
+            if (stakeHolders[totalStakerCount - 1] == msg.sender) {
+                lastStakedAmount += newStakedAmount;
+            }
+        } else {
+            // Keep top stakers address
+            if (topStakers.length < maxTopStakerCount) {
+                topStakers.push(msg.sender);
+            }
+            // Add this stake Holder;
+            stakeHolders.push(msg.sender);
+            lastStakedAmount = newStakedAmount;
+            totalStakerCount += 1;
+            stakers[msg.sender] = Stake(
+                currentCycle,
+                currentCycle,
+                rewardEligible,
+                1,
+                poolTokens,
+                pendingTokens,
+                0,
+                0,
+                totalStakerCount
+            );
         }
 
-        totalPoolTokens += poolTokens; // total amount of reward eligible tokens for a holder
-        totalPendingTokens += pendingTokens; // total amount of reward ineligible tokens for a holder
-        reflectedTaxAmount = amount.mul(depositFee) / 100; // get the reflected amount according to depositFee value
-        reflectedDistributionAmount = reflectedTaxAmount / 2;// half the tax gets distributed
-        uint256 newStakedAmount = amount.sub(reflectedTaxAmount); // the amount of staked token newly by a current holder excluding reflected tax amount
         rTotalSupplyNew += newStakedAmount;
         // fTotalSupplyNew += rTotalSupplyNew.mul(rTotalSupplyNew.add(reflectedDistributionAmount)).div(rTotalSupplyNew);
 
@@ -260,29 +287,6 @@ contract PoolOne is ReentrancyGuard, Ownable {
             stakedBalances[msg.sender] += newStakedAmount;
         }
 
-        // Keep top 20 stakers
-        bool alreadyAdded = false;
-        if (stakeHolders.length < maxTopStakerCount) {
-            for (uint256 i = 0; i < stakeHolders.length; i++) {
-                if (stakeHolders[i] == msg.sender) {
-                    alreadyAdded = true;
-                    break;
-                }
-            }
-            if (alreadyAdded == false) {
-                stakeHolders.push(msg.sender);
-            }
-        }
-
-        // Keep last staker address and stake amount
-        if (lastStaker != msg.sender) {
-            lastStaker = msg.sender;
-            lastStakedAmount = newStakedAmount;
-        } else {
-            lastStakedAmount += newStakedAmount;
-        }
-
-        // totalStaked += amount;
         totalReflected += reflectedTaxAmount;
         emit StakeEvent(msg.sender, amount);
     }
@@ -349,7 +353,7 @@ contract PoolOne is ReentrancyGuard, Ownable {
         return (numerator.div(whole).add(5)).div(10);
     }
 
-    function percentageOfPool(address wallet) view public returns(uint) {
+    function percentageOfPool(address wallet) public view returns(uint) {
         if (totalPoolTokens == 0) {
             return 0;
         }
@@ -376,5 +380,9 @@ contract PoolOne is ReentrancyGuard, Ownable {
                 msg.sender,
                 amount);
         emit Transfer(address(this), msg.sender, amount);
+    }
+
+    function _topStakers() external view returns(address[] memory) {
+        return topStakers;
     }
 }
